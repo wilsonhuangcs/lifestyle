@@ -211,7 +211,7 @@ export default function MobileCardView({ cards, expenses, expenseCategories, pro
           </form>
         )}
 
-          {/* Spending summary */}
+          {/* Spending summary here */}
           {selectedCard && (
             <div className="mcv-spending-row">
               <div>
