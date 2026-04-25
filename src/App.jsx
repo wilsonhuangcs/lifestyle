@@ -15,6 +15,7 @@ import { useGoals } from './hooks/useGoals';
 import Auth from './components/Auth';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import MobileNavBar from './components/MobileNavBar';
 import BudgetDashboard from './components/BudgetDashboard';
 import ProfilePage from './components/ProfilePage';
 import GymDashboard from './components/gym/GymDashboard';
@@ -225,6 +226,7 @@ export default function App() {
             <div className="loading">Loading...</div>
           </div>
         </main>
+        <MobileNavBar page={page} onSetPage={setPage} />
       </div>
     );
   }
@@ -246,6 +248,7 @@ export default function App() {
             />
           </div>
         </main>
+        <MobileNavBar page={page} onSetPage={setPage} />
       </div>
     );
   }
@@ -262,6 +265,7 @@ export default function App() {
               <div className="loading">Loading gym...</div>
             </div>
           </main>
+          <MobileNavBar page={page} onSetPage={setPage} />
         </div>
       );
     }
@@ -353,6 +357,7 @@ export default function App() {
             )}
           </div>
         </main>
+        <MobileNavBar page={page} onSetPage={setPage} />
       </div>
     );
   }
@@ -389,6 +394,7 @@ export default function App() {
           />
         </div>
       </main>
+      <MobileNavBar page={page} onSetPage={setPage} />
     </div>
   );
 }
