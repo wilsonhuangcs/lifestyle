@@ -66,8 +66,8 @@ export default function MobileCardView({ cards, expenses, expenseCategories, pro
 
   const catMap = useMemo(() => new Map(expenseCategories.map(c => [c.id, c])), [expenseCategories]);
 
-  const addCardIdx = cards.length; // index of the blank add-card slot
-  const safeIdx = Math.min(selectedIdx, cards.length); // can equal addCardIdx
+  const addCardIdx = cards.length; 
+  const safeIdx = Math.min(selectedIdx, cards.length); 
   const isAddCardSelected = safeIdx === addCardIdx;
   const selectedCard = isAddCardSelected ? null : (cards[safeIdx] ?? null);
 
