@@ -92,7 +92,7 @@ export default function BudgetHeader({
 
         {/* Card 3: Expenses */}
         <div className="budget-stat-card">
-          <span className="budget-stat-card-label">Expenses</span>
+          <span className="budget-stat-card-label expense-label">Expenses</span>
           <span className="budget-stat-card-value expense-value">{formatCurrency(totalSpent)}</span>
           <span className="budget-stat-card-sub">{isBudgetMode ? `Net: ${formatCurrency(netSpent)}` : ''}</span>
         </div>

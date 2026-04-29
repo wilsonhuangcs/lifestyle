@@ -10,6 +10,7 @@ export function useCategoryManager(userId) {
 
   useEffect(() => {
     if (!userId) return;
+    let cancelled = false;
 
     const load = async () => {
       const { data } = await supabase
@@ -18,12 +19,14 @@ export function useCategoryManager(userId) {
         .eq('user_id', userId)
         .order('sort_order', { ascending: true });
 
+      if (cancelled) return;
+
       // Check which default categories are missing by name+type
       const existingKeys = new Set(
         (data || []).map(r => `${r.type}:${r.name.toLowerCase()}`)
       );
 
-      const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const uid = () => crypto.randomUUID();
       const missingRows = [];
 
       for (const c of DEFAULT_EXPENSE_CATEGORIES) {
@@ -31,7 +34,7 @@ export function useCategoryManager(userId) {
           missingRows.push({
             id: uid(), user_id: userId, type: 'expense',
             name: c.name, color: c.color, icon: c.icon,
-            sort_order: missingRows.length,
+            sort_order: (data || []).filter(r => r.type === 'expense').length + missingRows.length,
           });
         }
       }
@@ -40,14 +43,16 @@ export function useCategoryManager(userId) {
           missingRows.push({
             id: uid(), user_id: userId, type: 'income',
             name: c.name, color: c.color, icon: c.icon,
-            sort_order: missingRows.length,
+            sort_order: (data || []).filter(r => r.type === 'income').length + missingRows.length,
           });
         }
       }
 
-      if (missingRows.length > 0) {
+      if (missingRows.length > 0 && !cancelled) {
         await supabase.from('user_categories').insert(missingRows);
       }
+
+      if (cancelled) return;
 
       // Reload all categories
       const { data: allData } = await supabase
@@ -55,6 +60,8 @@ export function useCategoryManager(userId) {
         .select('*')
         .eq('user_id', userId)
         .order('sort_order', { ascending: true });
+
+      if (cancelled) return;
 
       setExpenseCategories(
         (allData || []).filter(c => c.type === 'expense').map(mapRow)
@@ -66,11 +73,15 @@ export function useCategoryManager(userId) {
     };
 
     load();
+    return () => { cancelled = true; };
   }, [userId]);
 
   const addCategory = useCallback(async (type, { name, color, icon }) => {
     const list = type === 'expense' ? expenseCategories : incomeCategories;
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    const duplicate = list.some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (duplicate) return { error: `A category named "${name}" already exists.` };
+
+    const id = crypto.randomUUID();
     const newCat = { id, name, color, icon: icon || '', sortOrder: list.length };
 
     if (type === 'expense') {
@@ -93,6 +104,14 @@ export function useCategoryManager(userId) {
   }, [userId, expenseCategories, incomeCategories]);
 
   const updateCategory = useCallback(async (id, fields) => {
+    if (fields.name !== undefined) {
+      const allCategories = [...expenseCategories, ...incomeCategories];
+      const duplicate = allCategories.some(
+        c => c.id !== id && c.name.toLowerCase() === fields.name.toLowerCase()
+      );
+      if (duplicate) return { error: `A category named "${fields.name}" already exists.` };
+    }
+
     const update = (list) =>
       list.map(c => c.id === id ? { ...c, ...fields } : c);
 
@@ -105,7 +124,8 @@ export function useCategoryManager(userId) {
     if (fields.icon !== undefined) dbFields.icon = fields.icon;
 
     await supabase.from('user_categories').update(dbFields).eq('id', id);
-  }, []);
+    return {};
+  }, [expenseCategories, incomeCategories]);
 
   const deleteCategory = useCallback(async (id) => {
     setExpenseCategories(prev => prev.filter(c => c.id !== id));

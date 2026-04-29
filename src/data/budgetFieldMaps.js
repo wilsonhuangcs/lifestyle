@@ -29,6 +29,7 @@ export const goalRowMap = {
   sort_order:     'sortOrder',
   category_id:    'categoryId',
   category_type:  'categoryType',
+  goal_type:      'goalType',
   created_at:     'createdAt',
 };
 
@@ -42,4 +43,5 @@ export const goalFieldMap = {
   sortOrder:     'sort_order',
   categoryId:    'category_id',
   categoryType:  'category_type',
+  goalType:      'goal_type',
 };

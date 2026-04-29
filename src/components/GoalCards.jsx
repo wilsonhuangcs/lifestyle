@@ -62,7 +62,13 @@ function IconPicker({ value, onChange }) {
   );
 }
 
+const GOAL_TYPES = [
+  { value: 'savings', label: 'Savings',       icon: 'savings',       desc: 'Save up towards a target' },
+  { value: 'limit',   label: 'Spending Limit', icon: 'money_off',     desc: 'Stay under a spending cap' },
+];
+
 function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCategories = [] }) {
+  const [goalType, setGoalType] = useState(initial?.goalType || 'savings');
   const [name, setName] = useState(initial?.name || '');
   const [target, setTarget] = useState(initial?.targetAmount?.toString() || '');
   const [saved, setSaved] = useState(initial?.savedAmount > 0 ? initial.savedAmount.toString() : '');
@@ -71,6 +77,7 @@ function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCat
   const [categoryType, setCategoryType] = useState(initial?.categoryType || 'expense');
   const [categoryId, setCategoryId] = useState(initial?.categoryId || '');
 
+  const isLimit = goalType === 'limit';
   const categoryOptions = categoryType === 'expense' ? expenseCategories : incomeCategories;
 
   const handleSubmit = (e) => {
@@ -79,6 +86,7 @@ function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCat
     if (!name.trim() || isNaN(amt) || amt <= 0) return;
     const savedAmt = parseFloat(saved);
     onSave({
+      goalType,
       name: name.trim(),
       targetAmount: amt,
       savedAmount: !isNaN(savedAmt) && savedAmt > 0 ? savedAmt : 0,
@@ -91,11 +99,26 @@ function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCat
 
   return (
     <form className="goal-form" onSubmit={handleSubmit}>
+      {/* Goal type toggle */}
+      <div className="goal-type-toggle">
+        {GOAL_TYPES.map(t => (
+          <button
+            key={t.value}
+            type="button"
+            className={`goal-type-btn ${goalType === t.value ? 'active' : ''}`}
+            onClick={() => setGoalType(t.value)}
+          >
+            <span className="material-icons">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div className="goal-form-row">
         <IconPicker value={icon} onChange={setIcon} />
         <input
           className="goal-form-input"
-          placeholder="Goal name (e.g. PS5)"
+          placeholder={isLimit ? 'Goal name (e.g. Eating Out)' : 'Goal name (e.g. PS5)'}
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoFocus
@@ -118,7 +141,7 @@ function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCat
       <input
         className="goal-form-input"
         type="number"
-        placeholder="Target amount"
+        placeholder={isLimit ? 'Spending limit' : 'Target amount'}
         min="0.01"
         step="0.01"
         value={target}
@@ -151,15 +174,17 @@ function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCat
         </select>
       </div>
 
-      <input
-        className="goal-form-input"
-        type="number"
-        placeholder="Amount saved so far (optional)"
-        min="0"
-        step="0.01"
-        value={saved}
-        onChange={(e) => setSaved(e.target.value)}
-      />
+      {!isLimit && (
+        <input
+          className="goal-form-input"
+          type="number"
+          placeholder="Amount saved so far (optional)"
+          min="0"
+          step="0.01"
+          value={saved}
+          onChange={(e) => setSaved(e.target.value)}
+        />
+      )}
       <div className="goal-form-actions">
         <button type="submit" className="goal-form-save">Save</button>
         <button type="button" className="goal-form-cancel" onClick={onCancel}>Cancel</button>
@@ -169,14 +194,28 @@ function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCat
 }
 
 function GoalCard({ goal, onEdit, onDelete, isDragging, isDragOver, onDragStart, onDragEnter, onDragEnd }) {
-  const saved = goal.savedAmount || 0;
+  const isLimit = goal.goalType === 'limit';
+  const spent = goal.savedAmount || 0;
   const target = goal.targetAmount || 0;
-  const pct = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
+  const pct = target > 0 ? Math.min((spent / target) * 100, 100) : 0;
   const periodLabel = PERIODS.find(p => p.value === (goal.period || 'one-time'))?.label || '';
+
+  const isOver = isLimit && spent > target;
+  const isUnder = isLimit && target > 0 && spent <= target;
+  const isAchieved = !isLimit && pct >= 100;
+  const isInProgress = !isLimit && pct > 0 && pct < 100;
+
+  const cardClass = [
+    'goal-card',
+    isDragging ? 'goal-card--dragging' : '',
+    isDragOver ? 'goal-card--drag-over' : '',
+    isOver     ? 'goal-card--over-limit'  : '',
+    (isUnder || isAchieved) ? 'goal-card--success' : '',
+  ].filter(Boolean).join(' ');
 
   return (
     <div
-      className={`goal-card${isDragging ? ' goal-card--dragging' : ''}${isDragOver ? ' goal-card--drag-over' : ''}`}
+      className={cardClass}
       draggable
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
@@ -192,14 +231,27 @@ function GoalCard({ goal, onEdit, onDelete, isDragging, isDragOver, onDragStart,
         </button>
       </div>
 
+      {/* Status badge */}
+      {(isLimit || isAchieved || isInProgress) && (
+        <div className={`goal-card-status-badge ${isOver ? 'over' : isInProgress ? 'progress' : 'under'}`}>
+          <span className="material-icons">
+            {isOver ? 'warning' : isAchieved ? 'emoji_events' : isInProgress ? 'trending_up' : 'check_circle'}
+          </span>
+          {isOver ? 'Over limit' : isAchieved ? 'Achieved!' : isInProgress ? 'In Progress' : 'On track'}
+        </div>
+      )}
+
       {/* Faded base icon */}
       <span className="material-icons goal-card-icon-bg">{goal.icon || 'star'}</span>
 
-      {/* Filled icon clipped from bottom up based on progress */}
-      {saved > 0 && (
+      {/* Filled icon — green fill for savings, red fill for limit goals */}
+      {spent > 0 && (
         <span
           className="material-icons goal-card-icon-fill"
-          style={{ clipPath: `inset(${100 - pct}% 0 0 0)` }}
+          style={{
+            clipPath: `inset(${100 - pct}% 0 0 0)`,
+            color: isLimit ? (isOver ? '#ef4444' : '#22c55e') : undefined,
+          }}
         >
           {goal.icon || 'star'}
         </span>
@@ -210,14 +262,30 @@ function GoalCard({ goal, onEdit, onDelete, isDragging, isDragOver, onDragStart,
       <div className="goal-card-period-badge">{periodLabel}</div>
 
       <div className="goal-card-budget-section">
-        <span className="goal-card-budget-label">GOAL</span>
+        <span className="goal-card-budget-label">{isLimit ? 'LIMIT' : 'GOAL'}</span>
         <FittedText text={formatCurrency(target)} className="goal-card-budget-amount" maxSize={22} minSize={10} />
       </div>
 
       <div className="goal-card-hover-overlay">
-        <span className="goal-card-hover-label">Currently Saved</span>
-        <span className="goal-card-hover-amount">{formatCurrency(saved)}</span>
-        <span className="goal-card-hover-pct">{pct >= 100 ? 'Woohoo! Goal achieved!' : `${Math.round(pct)}% of goal`}</span>
+        {isLimit ? (
+          <>
+            <span className="goal-card-hover-label">{isOver ? 'Over by' : 'Spent'}</span>
+            <span className="goal-card-hover-amount" style={{ color: isOver ? '#ef4444' : '#22c55e' }}>
+              {isOver ? formatCurrency(spent - target) : formatCurrency(spent)}
+            </span>
+            <span className="goal-card-hover-pct">
+              {isOver
+                ? `${formatCurrency(spent - target)} over limit`
+                : `${formatCurrency(target - spent)} remaining`}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="goal-card-hover-label">Currently Saved</span>
+            <span className="goal-card-hover-amount">{formatCurrency(spent)}</span>
+            <span className="goal-card-hover-pct">{pct >= 100 ? 'Woohoo! Goal achieved!' : `${Math.round(pct)}% of goal`}</span>
+          </>
+        )}
       </div>
     </div>
   );
@@ -260,6 +328,9 @@ export default function GoalCards({ goals, onAddGoal, onUpdateGoal, onDeleteGoal
       return true;
     });
     const fromTransactions = filtered.reduce((sum, t) => sum + (t.amount || 0), 0);
+    if (g.goalType === 'limit') {
+      return { ...g, savedAmount: fromTransactions };
+    }
     return { ...g, savedAmount: (g.savedAmount || 0) + fromTransactions };
   }), [goals, expenses, income]);
 

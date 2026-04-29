@@ -5,7 +5,7 @@ const NAV_ITEMS = [
   { page: 'gym',    icon: 'fitness_center',          label: 'Gym' },
 ];
 
-export default function Sidebar({ user, profile, page, onSetPage, onSignOut, onOpenProfile }) {
+export default function Sidebar({ user, profile, page, onSetPage, onSignOut, onOpenProfile, darkMode, onToggleDark }) {
   const [tooltip, setTooltip] = useState(null);
 
   const displayName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ');
@@ -44,6 +44,18 @@ export default function Sidebar({ user, profile, page, onSetPage, onSignOut, onO
 
       {/* Bottom actions */}
       <div className="sidebar-bottom">
+        <div
+          className="sidebar-nav-item"
+          onMouseEnter={() => setTooltip('theme')}
+          onMouseLeave={() => setTooltip(null)}
+        >
+          <button className="sidebar-icon-btn" onClick={onToggleDark}>
+            <span className="material-icons">{darkMode ? 'light_mode' : 'dark_mode'}</span>
+          </button>
+          {tooltip === 'theme' && (
+            <div className="sidebar-tooltip">{darkMode ? 'Light Mode' : 'Dark Mode'}</div>
+          )}
+        </div>
         <div
           className="sidebar-nav-item"
           onMouseEnter={() => setTooltip('signout')}

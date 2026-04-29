@@ -116,39 +116,7 @@ export default function SpendingCalendar({ expenses, income = [], effectiveBudge
 
   return (
     <div className="spending-calendar">
-      <h2>Spending Calendar</h2>
-      <div className="sc-legend">
-        <span className="sc-legend-item"><span className="sc-dot under" />Under</span>
-        <span className="sc-legend-item"><span className="sc-dot neutral" />No spend / On budget</span>
-        <span className="sc-legend-item"><span className="sc-dot over" />Over</span>
-        <div className="sc-daily-budget-control">
-          <span className="sc-legend-label">Daily Budget:</span>
-          {editingBudget ? (
-            <div className="sc-budget-edit">
-              <input
-                ref={budgetInputRef}
-                className="sc-budget-input"
-                type="number"
-                min="0.01"
-                step="any"
-                value={budgetInput}
-                onChange={(e) => setBudgetInput(e.target.value)}
-                onBlur={commitBudgetEdit}
-                onKeyDown={(e) => { if (e.key === 'Enter') commitBudgetEdit(); if (e.key === 'Escape') setEditingBudget(false); }}
-                autoFocus
-              />
-              {isOverridden && (
-                <button className="sc-budget-reset" onClick={resetToAuto} title="Reset to auto">Auto</button>
-              )}
-            </div>
-          ) : (
-            <button className="sc-budget-value" onClick={startBudgetEdit} title="Click to set daily budget">
-              {dailyBudget > 0 ? formatCurrency(dailyBudget) : 'Set budget'}
-              <span className="material-icons">edit</span>
-            </button>
-          )}
-        </div>
-      </div>
+      <h2 className="sc-title">Spending Calendar</h2>
       <div className="sc-grid-header">
         {DAYS.map(d => <span key={d} className="sc-day-name">{d}</span>)}
       </div>
@@ -196,7 +164,7 @@ export default function SpendingCalendar({ expenses, income = [], effectiveBudge
                         <span className="sc-tooltip-dot" style={{ backgroundColor: cat?.color }} />
                         {item.description || cat?.name}
                       </span>
-                      <span className="sc-tooltip-amt">−{formatCurrency(item.amount)}</span>
+                      <span className="sc-tooltip-amt sc-tooltip-amt--expense">−{formatCurrency(item.amount)}</span>
                     </div>
                   );
                 })}
@@ -214,18 +182,18 @@ export default function SpendingCalendar({ expenses, income = [], effectiveBudge
                 })}
                 {tooltipData.earned > 0 && (
                   <div className="sc-tooltip-offset">
-                    <span>{formatCurrency(tooltipData.spent)} spent − {formatCurrency(tooltipData.earned)} income</span>
-                    <span style={tooltipData.net <= 0 ? { color: 'var(--color-success)' } : undefined}>
+                    <span>Net</span>
+                    <span style={{ color: tooltipData.net <= 0 ? 'var(--color-success)' : '#ff6b6b' }}>
                       {tooltipData.net <= 0
-                        ? `+${formatCurrency(Math.abs(tooltipData.net))} surplus`
-                        : formatCurrency(tooltipData.net)}
+                        ? `+${formatCurrency(Math.abs(tooltipData.net))}`
+                        : `−${formatCurrency(tooltipData.net)}`}
                     </span>
                   </div>
                 )}
                 {tooltipData.earned === 0 && (
                   <div className="sc-tooltip-total">
                     <span>Total</span>
-                    <span>{formatCurrency(tooltipData.spent)}</span>
+                    <span style={{ color: '#ff6b6b' }}>{formatCurrency(tooltipData.spent)}</span>
                   </div>
                 )}
                 {dailyBudget > 0 && (() => {
@@ -244,6 +212,38 @@ export default function SpendingCalendar({ expenses, income = [], effectiveBudge
               </>
             )}
           </div>
+        )}
+      </div>
+      <div className="sc-legend">
+        <span className="sc-legend-item"><span className="sc-dot under" />Under</span>
+        <span className="sc-legend-item"><span className="sc-dot neutral" />On budget</span>
+        <span className="sc-legend-item"><span className="sc-dot over" />Over</span>
+      </div>
+      <div className="sc-daily-budget-control">
+        <span className="sc-legend-label">Daily Budget:</span>
+        {editingBudget ? (
+          <div className="sc-budget-edit">
+            <input
+              ref={budgetInputRef}
+              className="sc-budget-input"
+              type="number"
+              min="0.01"
+              step="any"
+              value={budgetInput}
+              onChange={(e) => setBudgetInput(e.target.value)}
+              onBlur={commitBudgetEdit}
+              onKeyDown={(e) => { if (e.key === 'Enter') commitBudgetEdit(); if (e.key === 'Escape') setEditingBudget(false); }}
+              autoFocus
+            />
+            {isOverridden && (
+              <button className="sc-budget-reset" onClick={resetToAuto} title="Reset to auto">Auto</button>
+            )}
+          </div>
+        ) : (
+          <button className="sc-budget-value" onClick={startBudgetEdit} title="Click to set daily budget">
+            {dailyBudget > 0 ? formatCurrency(dailyBudget) : 'Set budget'}
+            <span className="material-icons">edit</span>
+          </button>
         )}
       </div>
     </div>

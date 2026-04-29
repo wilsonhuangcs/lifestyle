@@ -9,7 +9,10 @@ const formatDate = (dateStr) =>
   new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 function TransactionEditForm({ item, categories, cards, onSave, onCancel }) {
-  const [categoryId, setCategoryId] = useState(item.categoryId);
+  const validInitialId = categories.find(c => c.id === item.categoryId)
+    ? item.categoryId
+    : (categories[0]?.id ?? '');
+  const [categoryId, setCategoryId] = useState(validInitialId);
   const [amount, setAmount] = useState(item.amount.toString());
   const [description, setDescription] = useState(item.description);
   const [date, setDate] = useState(new Date(item.date).toISOString().split('T')[0]);

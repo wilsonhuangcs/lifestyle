@@ -33,22 +33,27 @@ export default function CategoryList({
   const [iconPickerId, setIconPickerId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
+  const [renameError, setRenameError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#4ECDC4');
   const [newIcon, setNewIcon] = useState('');
+  const [addError, setAddError] = useState('');
 
   const handleRenameStart = (cat) => {
     setRenamingId(cat.id);
     setRenameValue(cat.name);
+    setRenameError('');
     setColorPickerId(null);
   };
 
-  const handleRenameSubmit = (id) => {
+  const handleRenameSubmit = async (id) => {
     if (renameValue.trim()) {
-      onUpdate(id, { name: renameValue.trim() });
+      const result = await onUpdate(id, { name: renameValue.trim() });
+      if (result?.error) { setRenameError(result.error); return; }
     }
     setRenamingId(null);
+    setRenameError('');
   };
 
   const handleColorPick = (id, color) => {
@@ -56,13 +61,15 @@ export default function CategoryList({
     setColorPickerId(null);
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    onAdd({ name: newName.trim(), color: newColor, icon: newIcon.trim() });
+    const result = await onAdd({ name: newName.trim(), color: newColor, icon: newIcon.trim() });
+    if (result?.error) { setAddError(result.error); return; }
     setNewName('');
     setNewColor('#4ECDC4');
     setNewIcon('');
+    setAddError('');
     setShowAddForm(false);
   };
 
@@ -118,14 +125,17 @@ export default function CategoryList({
                   cat.icon && <span className="category-icon">{cat.icon}</span>
                 )}
                 {editing && renamingId === cat.id ? (
-                  <input
-                    className="rename-input"
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => handleRenameSubmit(cat.id)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(cat.id)}
-                    autoFocus
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <input
+                      className="rename-input"
+                      value={renameValue}
+                      onChange={(e) => { setRenameValue(e.target.value); setRenameError(''); }}
+                      onBlur={() => handleRenameSubmit(cat.id)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit(cat.id)}
+                      autoFocus
+                    />
+                    {renameError && <span className="cat-name-error">{renameError}</span>}
+                  </div>
                 ) : (
                   <span
                     className={`category-name ${editing ? 'editable' : ''}`}
@@ -238,7 +248,8 @@ export default function CategoryList({
                 autoFocus
               />
               <button type="submit" className="btn-save-cat">Add</button>
-              <button type="button" className="btn-delete" onClick={() => setShowAddForm(false)}>&times;</button>
+              <button type="button" className="btn-delete" onClick={() => { setShowAddForm(false); setAddError(''); }}>&times;</button>
+              {addError && <span className="cat-name-error full-width">{addError}</span>}
               {iconPickerId === '__new' && (
                 <div className="icon-picker-inline full-width">
                   <div className="icon-presets">

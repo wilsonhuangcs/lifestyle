@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import SpendingCalendar from '../SpendingCalendar';
 
 const fmt = (n) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD',
@@ -7,68 +8,12 @@ const fmt = (n) =>
 const fmtDate = (d) =>
   new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-function GoalsStrip({ goals, expenses, income, month }) {
-  const goalsWithProgress = useMemo(() => goals.map(g => {
-    if (!g.categoryId) return { ...g, computed: g.savedAmount || 0 };
-    const txns = g.categoryType === 'income' ? income : expenses;
-    const today = new Date().toISOString().slice(0, 10);
-    const filtered = txns.filter(t => {
-      if (t.categoryId !== g.categoryId) return false;
-      const d = t.date?.slice(0, 10);
-      if (!d) return false;
-      if (g.period === 'daily') return d === today;
-      if (g.period === 'weekly') {
-        const now = new Date();
-        const txDate = new Date(d + 'T00:00:00');
-        const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() - now.getDay());
-        weekStart.setHours(0, 0, 0, 0);
-        return txDate >= weekStart;
-      }
-      if (g.period === 'monthly') return d.slice(0, 7) === (month || today.slice(0, 7));
-      if (g.period === 'yearly') return d.slice(0, 4) === today.slice(0, 4);
-      return true;
-    });
-    const fromTxns = filtered.reduce((s, t) => s + (t.amount || 0), 0);
-    return { ...g, computed: (g.savedAmount || 0) + fromTxns };
-  }), [goals, expenses, income, month]);
-
-  if (goalsWithProgress.length === 0) {
-    return (
-      <div className="mov-goals-empty">
-        <span className="material-icons" style={{ fontSize: 22, opacity: 0.3 }}>flag</span>
-        <span>No goals yet</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mov-goals-strip">
-      {goalsWithProgress.map(g => {
-        const pct = g.targetAmount > 0 ? Math.min((g.computed / g.targetAmount) * 100, 100) : 0;
-        return (
-          <div key={g.id} className="mov-goal-chip">
-            <span className="material-icons mov-goal-icon">{g.icon || 'star'}</span>
-            <span className="mov-goal-name">{g.name}</span>
-            <div className="mov-goal-bar-track">
-              <div
-                className="mov-goal-bar-fill"
-                style={{ width: `${pct}%`, background: pct >= 100 ? '#22c55e' : '#7c5cfc' }}
-              />
-            </div>
-            <span className="mov-goal-pct">{Math.round(pct)}%</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function MobileOverview({
   mode, budget, balance, totalSpent, totalIncome,
   expenses, income, expenseCategories, incomeCategories,
   month, onGoToTransactions,
-  goals, onSetBudget, onSetBalance,
+  onSetBudget, onSetBalance,
+  effectiveBudget, userId,
 }) {
   const [editing, setEditing] = useState(false);
   const [inputVal, setInputVal] = useState('');
@@ -143,7 +88,14 @@ export default function MobileOverview({
             {isBudget ? 'Set your monthly budget' : 'Set your starting balance'}
           </span>
         )}
-        <GoalsStrip goals={goals || []} expenses={expenses} income={income} month={month} />
+        <SpendingCalendar
+          expenses={expenses}
+          income={income}
+          effectiveBudget={effectiveBudget}
+          month={month}
+          expenseCategories={expenseCategories}
+          userId={userId}
+        />
       </div>
 
       {/* Income / Expense summary */}

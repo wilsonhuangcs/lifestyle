@@ -29,6 +29,16 @@ const ProgressCharts = lazy(() => import('./components/gym/ProgressCharts'));
 export default function App() {
   const [page, setPage] = useState('budget');
   const [gymView, setGymView] = useState('dashboard');
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved !== null ? saved === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  const toggleDarkMode = () => setDarkMode(prev => {
+    const next = !prev;
+    localStorage.setItem('darkMode', next);
+    return next;
+  });
   const [activeWorkoutId, setActiveWorkoutId] = useState(null);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [exercisePickerCallback, setExercisePickerCallback] = useState(null);
@@ -214,11 +224,13 @@ export default function App() {
     onSetPage: setPage,
     onSignOut: signOut,
     onOpenProfile: () => setPage('profile'),
+    darkMode,
+    onToggleDark: toggleDarkMode,
   };
 
   if (budgetLoading || expensesLoading || incomeLoading || recurringLoading || categoriesLoading || profileLoading || cardsLoading || goalsLoading) {
     return (
-      <div className="app-shell">
+      <div className={`app-shell${darkMode ? " dark" : ""}`}>
         <Sidebar {...navbarProps} />
         <main className="main-area">
           <Navbar {...navbarProps} />
@@ -226,7 +238,7 @@ export default function App() {
             <div className="loading">Loading...</div>
           </div>
         </main>
-        <MobileNavBar page={page} onSetPage={setPage} />
+        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
       </div>
     );
   }
@@ -234,7 +246,7 @@ export default function App() {
   // Profile page
   if (page === 'profile') {
     return (
-      <div className="app-shell">
+      <div className={`app-shell${darkMode ? " dark" : ""}`}>
         <Sidebar {...navbarProps} />
         <main className="main-area">
           <Navbar {...navbarProps} />
@@ -248,7 +260,7 @@ export default function App() {
             />
           </div>
         </main>
-        <MobileNavBar page={page} onSetPage={setPage} />
+        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
       </div>
     );
   }
@@ -257,7 +269,7 @@ export default function App() {
   if (page === 'gym') {
     if (exercisesLoading || workoutsLoading || templatesLoading || recoveryLoading) {
       return (
-        <div className="app-shell">
+        <div className={`app-shell${darkMode ? " dark" : ""}`}>
           <Sidebar {...navbarProps} />
           <main className="main-area">
             <Navbar {...navbarProps} />
@@ -265,13 +277,13 @@ export default function App() {
               <div className="loading">Loading gym...</div>
             </div>
           </main>
-          <MobileNavBar page={page} onSetPage={setPage} />
+          <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
         </div>
       );
     }
 
     return (
-      <div className="app-shell">
+      <div className={`app-shell${darkMode ? " dark" : ""}`}>
         <Sidebar {...navbarProps} />
         <main className="main-area">
           <Navbar {...navbarProps} />
@@ -357,7 +369,7 @@ export default function App() {
             )}
           </div>
         </main>
-        <MobileNavBar page={page} onSetPage={setPage} />
+        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
       </div>
     );
   }
@@ -366,7 +378,7 @@ export default function App() {
   const effectiveBudget = mode === 'budget' ? budget : balance;
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${darkMode ? " dark" : ""}`}>
       <Sidebar {...navbarProps} />
       <main className="main-area">
         <Navbar {...navbarProps} />
@@ -394,7 +406,7 @@ export default function App() {
           />
         </div>
       </main>
-      <MobileNavBar page={page} onSetPage={setPage} />
+      <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
     </div>
   );
 }

@@ -17,7 +17,7 @@ const SpendingCharts = lazy(() => import('./SpendingCharts'));
 const MOBILE_TABS = [
   { id: 'overview',     icon: 'dashboard',      label: 'Overview'     },
   { id: 'transactions', icon: 'receipt_long',   label: 'Transactions' },
-  { id: 'calendar',     icon: 'calendar_month', label: 'Calendar'     },
+  { id: 'goals',        icon: 'flag',           label: 'Goals'        },
   { id: 'analytics',    icon: 'bar_chart',      label: 'Analytics'    },
   { id: 'cards',        icon: 'credit_card',    label: 'Cards'        },
 ];
@@ -104,10 +104,11 @@ export default function BudgetDashboard({
             expenseCategories={expenseCategories}
             incomeCategories={incomeCategories}
             month={month}
-            goals={goals}
             onSetBudget={onSetBudget}
             onSetBalance={onSetBalance}
             onGoToTransactions={() => setMobileTab('transactions')}
+            effectiveBudget={effectiveBudget}
+            userId={userId}
           />
         )}
 
@@ -125,33 +126,23 @@ export default function BudgetDashboard({
           </>
         )}
 
-        {mobileTab === 'calendar' && (
-          <div className="card">
-            <SpendingCalendar
-              expenses={expenses}
-              income={income}
-              effectiveBudget={effectiveBudget}
-              month={month}
-              expenseCategories={expenseCategories}
-              userId={userId}
-            />
-          </div>
+        {mobileTab === 'goals' && (
+          <GoalCards
+            goals={goals}
+            onAddGoal={onAddGoal}
+            onUpdateGoal={onUpdateGoal}
+            onDeleteGoal={onDeleteGoal}
+            expenseCategories={expenseCategories}
+            incomeCategories={incomeCategories}
+            expenses={expenses}
+            income={income}
+            userId={userId}
+            month={month}
+          />
         )}
 
         {mobileTab === 'analytics' && (
           <>
-            <GoalCards
-              goals={goals}
-              onAddGoal={onAddGoal}
-              onUpdateGoal={onUpdateGoal}
-              onDeleteGoal={onDeleteGoal}
-              expenseCategories={expenseCategories}
-              incomeCategories={incomeCategories}
-              expenses={expenses}
-              income={income}
-              userId={userId}
-              month={month}
-            />
             <Suspense fallback={null}>
               <SpendingCharts
                 expenses={expenses}
