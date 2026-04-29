@@ -3,7 +3,7 @@ const NAV_ITEMS = [
   { page: 'gym',    icon: 'fitness_center',          label: 'Gym'    },
 ];
 
-export default function MobileNavBar({ page, onSetPage, darkMode, onToggleDark }) {
+export default function MobileNavBar({ page, onSetPage }) {
   return (
     <nav className="mobile-nav-bar">
       {NAV_ITEMS.map(({ page: p, icon, label }) => (
@@ -16,10 +16,6 @@ export default function MobileNavBar({ page, onSetPage, darkMode, onToggleDark }
           <span className="mobile-nav-label">{label}</span>
         </button>
       ))}
-      <button className="mobile-nav-item" onClick={onToggleDark}>
-        <span className="material-icons">{darkMode ? 'light_mode' : 'dark_mode'}</span>
-        <span className="mobile-nav-label">{darkMode ? 'Light' : 'Dark'}</span>
-      </button>
     </nav>
   );
 }

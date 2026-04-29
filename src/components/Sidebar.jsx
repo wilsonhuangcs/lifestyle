@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Mark } from './Logo';
 
 const NAV_ITEMS = [
   { page: 'budget', icon: 'account_balance_wallet', label: 'Budget' },
@@ -17,7 +18,7 @@ export default function Sidebar({ user, profile, page, onSetPage, onSignOut, onO
     <aside className="sidebar">
       {/* Logo mark */}
       <div className="sidebar-logo-mark">
-        <span className="material-icons" style={{ fontSize: '22px', color: '#7C5CFC' }}>bolt</span>
+        <Mark size={28} gradient={darkMode ? 'dark' : 'light'} />
       </div>
 
       {/* Nav items */}

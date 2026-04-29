@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-export default function Navbar({ user, profile, onOpenProfile, onSignOut }) {
+export default function Navbar({ user, profile, onOpenProfile, onSignOut, darkMode, onToggleDark }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -50,6 +50,15 @@ export default function Navbar({ user, profile, onOpenProfile, onSignOut }) {
             </div>
           )}
         </div>
+
+        {/* Theme toggle — mobile only (sidebar handles desktop) */}
+        <button
+          className="topbar-icon-btn topbar-theme-btn"
+          onClick={onToggleDark}
+          title={darkMode ? 'Light mode' : 'Dark mode'}
+        >
+          <span className="material-icons">{darkMode ? 'light_mode' : 'dark_mode'}</span>
+        </button>
 
         {/* Notification bell */}
         <button className="topbar-icon-btn" title="Notifications">

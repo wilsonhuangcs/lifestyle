@@ -161,7 +161,9 @@ export default function MobileCardView({ cards, expenses, expenseCategories, pro
             className={`mcv-card-slide mcv-card-add ${isAddCardSelected ? 'selected' : ''}`}
             onClick={() => setShowForm(true)}
           >
-            <span className="material-icons mcv-card-add-icon">add</span>
+            <div className="mcv-card-add-tile">
+              <span className="material-icons">add</span>
+            </div>
             <span className="mcv-card-add-label">Add Card</span>
           </div>
         </div>
@@ -224,31 +226,33 @@ export default function MobileCardView({ cards, expenses, expenseCategories, pro
             </div>
           )}
 
-          {/* Card transactions */}
-          <div className="mcv-txns">
-            <h3 className="mcv-txns-title">Recent Transactions</h3>
-            {cardExpenses.length === 0 ? (
-              <p className="mcv-txns-empty">No transactions linked to this card.</p>
-            ) : (
-              <ul className="mcv-txn-list">
-                {cardExpenses.map(e => {
-                  const cat = catMap.get(e.categoryId);
-                  return (
-                    <li key={e.id} className="mcv-txn-row">
-                      <div className="mcv-txn-icon" style={{ background: `${cat?.color || '#7c5cfc'}22`, color: cat?.color || '#7c5cfc' }}>
-                        {cat?.icon || (cat?.name?.[0] ?? 'T').toUpperCase()}
-                      </div>
-                      <div className="mcv-txn-details">
-                        <span className="mcv-txn-desc">{e.description || cat?.name || 'Transaction'}</span>
-                        <span className="mcv-txn-meta">{fmtDate(e.date)}{cat ? ` · ${cat.name}` : ''}</span>
-                      </div>
-                      <span className="mcv-txn-amount">-{fmt(e.amount)}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+          {/* Card transactions — only when a real card is selected */}
+          {selectedCard && (
+            <div className="mcv-txns">
+              <h3 className="mcv-txns-title">Recent Transactions</h3>
+              {cardExpenses.length === 0 ? (
+                <p className="mcv-txns-empty">No transactions linked to this card.</p>
+              ) : (
+                <ul className="mcv-txn-list">
+                  {cardExpenses.map(e => {
+                    const cat = catMap.get(e.categoryId);
+                    return (
+                      <li key={e.id} className="mcv-txn-row">
+                        <div className="mcv-txn-icon" style={{ background: `${cat?.color || '#7c5cfc'}22`, color: cat?.color || '#7c5cfc' }}>
+                          {cat?.icon || (cat?.name?.[0] ?? 'T').toUpperCase()}
+                        </div>
+                        <div className="mcv-txn-details">
+                          <span className="mcv-txn-desc">{e.description || cat?.name || 'Transaction'}</span>
+                          <span className="mcv-txn-meta">{fmtDate(e.date)}{cat ? ` · ${cat.name}` : ''}</span>
+                        </div>
+                        <span className="mcv-txn-amount">-{fmt(e.amount)}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
       </>
     </div>
   );

@@ -67,7 +67,7 @@ const GOAL_TYPES = [
   { value: 'limit',   label: 'Spending Limit', icon: 'money_off',     desc: 'Stay under a spending cap' },
 ];
 
-function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCategories = [] }) {
+export function GoalForm({ onSave, onCancel, initial, expenseCategories = [], incomeCategories = [] }) {
   const [goalType, setGoalType] = useState(initial?.goalType || 'savings');
   const [name, setName] = useState(initial?.name || '');
   const [target, setTarget] = useState(initial?.targetAmount?.toString() || '');

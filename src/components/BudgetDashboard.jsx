@@ -11,6 +11,7 @@ import CategoryList from './CategoryList';
 import MobileCardView from './mobile/MobileCardView';
 import MobileTransactionHistory from './mobile/MobileTransactionHistory';
 import MobileOverview from './mobile/MobileOverview';
+import MobileGoalCards from './mobile/MobileGoalCards';
 
 const SpendingCharts = lazy(() => import('./SpendingCharts'));
 
@@ -127,7 +128,7 @@ export default function BudgetDashboard({
         )}
 
         {mobileTab === 'goals' && (
-          <GoalCards
+          <MobileGoalCards
             goals={goals}
             onAddGoal={onAddGoal}
             onUpdateGoal={onUpdateGoal}
@@ -136,7 +137,6 @@ export default function BudgetDashboard({
             incomeCategories={incomeCategories}
             expenses={expenses}
             income={income}
-            userId={userId}
             month={month}
           />
         )}

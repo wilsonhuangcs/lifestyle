@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Wordmark } from './Logo';
 
 export default function Auth({ onSignIn, onSignUp }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -33,7 +34,9 @@ export default function Auth({ onSignIn, onSignUp }) {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">Budget Tracker</h1>
+        <div className="auth-wordmark">
+          <Wordmark size={36} />
+        </div>
         <p className="auth-subtitle">
           {isSignUp ? 'Create an account to get started' : 'Sign in to your account'}
         </p>

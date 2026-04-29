@@ -120,7 +120,7 @@ export default function MobileOverview({
             <h3 className="mov-section-title">Income</h3>
             <button className="mov-see-all" onClick={onGoToTransactions}>See all</button>
           </div>
-          <ul className="mov-txn-list card">
+          <ul className="mov-txn-list">
             {recentIncome.map(item => {
               const cat = incCatMap.get(item.categoryId);
               return (
@@ -147,7 +147,7 @@ export default function MobileOverview({
             <h3 className="mov-section-title">Spend</h3>
             <button className="mov-see-all" onClick={onGoToTransactions}>See all</button>
           </div>
-          <ul className="mov-txn-list card">
+          <ul className="mov-txn-list">
             {recentExpenses.map(item => {
               const cat = catMap.get(item.categoryId);
               return (
