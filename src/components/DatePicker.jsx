@@ -1,27 +1,43 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 export default function DatePicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const triggerRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   const selected = value ? new Date(value + 'T12:00:00') : new Date();
   const [viewYear, setViewYear] = useState(selected.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected.getMonth());
 
+  const isDark = document.querySelector('.app-shell')?.classList.contains('dark') ?? false;
+
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) setOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const updatePos = () => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+  };
+
   useEffect(() => {
     if (open) {
       setViewYear(selected.getFullYear());
       setViewMonth(selected.getMonth());
+      updatePos();
+      window.addEventListener('scroll', updatePos, true);
+      return () => window.removeEventListener('scroll', updatePos, true);
     }
   }, [open]);
 
@@ -65,38 +81,45 @@ export default function DatePicker({ value, onChange }) {
   });
 
   return (
-    <div className="datepicker" ref={ref}>
+    <div className="datepicker" ref={triggerRef}>
       <button type="button" className="datepicker-trigger" onClick={() => setOpen(!open)}>
         <span className="datepicker-icon">&#128197;</span>
         <span className="datepicker-value">{displayDate}</span>
         <span className="datepicker-caret">&#9662;</span>
       </button>
-      {open && (
-        <div className="datepicker-dropdown">
-          <div className="datepicker-nav">
-            <button type="button" className="datepicker-nav-btn" onClick={prevMonth}>&larr;</button>
-            <span className="datepicker-month-label">{monthLabel}</span>
-            <button type="button" className="datepicker-nav-btn" onClick={nextMonth}>&rarr;</button>
+      {open && createPortal(
+        <div className={isDark ? 'dark' : ''}>
+          <div
+            ref={dropdownRef}
+            className="datepicker-dropdown"
+            style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
+          >
+            <div className="datepicker-nav">
+              <button type="button" className="datepicker-nav-btn" onClick={prevMonth}>&larr;</button>
+              <span className="datepicker-month-label">{monthLabel}</span>
+              <button type="button" className="datepicker-nav-btn" onClick={nextMonth}>&rarr;</button>
+            </div>
+            <div className="datepicker-weekdays">
+              {DAYS.map(d => <span key={d} className="datepicker-weekday">{d}</span>)}
+            </div>
+            <div className="datepicker-grid">
+              {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                <span key={`empty-${i}`} className="datepicker-day empty" />
+              ))}
+              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
+                <button
+                  key={day}
+                  type="button"
+                  className={`datepicker-day ${isSelected(day) ? 'selected' : ''} ${isToday(day) ? 'today' : ''}`}
+                  onClick={() => handleSelect(day)}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="datepicker-weekdays">
-            {DAYS.map(d => <span key={d} className="datepicker-weekday">{d}</span>)}
-          </div>
-          <div className="datepicker-grid">
-            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-              <span key={`empty-${i}`} className="datepicker-day empty" />
-            ))}
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
-              <button
-                key={day}
-                type="button"
-                className={`datepicker-day ${isSelected(day) ? 'selected' : ''} ${isToday(day) ? 'today' : ''}`}
-                onClick={() => handleSelect(day)}
-              >
-                {day}
-              </button>
-            ))}
-          </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

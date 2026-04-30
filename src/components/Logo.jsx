@@ -1,4 +1,4 @@
-// Lifestyle logomark — a chunky, forward-leaning L with a curved heel.
+// Lifestyle logomark — a bold italic "L" with heavily rounded corners.
 // Drawn as a single closed path on a 240×240 grid so it scales cleanly to 16×16.
 // `gradient` accepts: false (solid `fill`), "light" (dark→gray for light bg),
 // or "dark" (white→gray for dark bg).
@@ -33,7 +33,7 @@ export function Mark({ size = 24, fill = 'currentColor', gradient = false }) {
         </defs>
       )}
       <path
-        d="M 92 36 L 148 36 Q 156 36 154 44 L 130 138 Q 128 146 136 146 L 196 146 Q 204 146 204 154 L 204 196 Q 204 204 196 204 L 60 204 Q 44 204 48 188 L 88 44 Q 90 36 92 36 Z"
+        d="M 59 38 Q 60 24 74 24 L 138 24 Q 156 24 154 42 L 143 127 Q 142 139 154 139 L 198 139 Q 212 139 212 153 L 212 198 Q 212 216 194 216 L 60 216 Q 46 216 47 202 Z"
         fill={f}
       />
     </svg>
@@ -69,14 +69,13 @@ export function MarkCut({ size = 24, fill = 'currentColor', gradient = false }) 
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M 92 36 L 148 36 Q 156 36 154 44 L 130 138 Q 128 146 136 146 L 196 146 Q 204 146 204 154 L 204 196 Q 204 204 196 204 L 60 204 Q 44 204 48 188 L 88 44 Q 90 36 92 36 Z M 110 96 Q 134 100 130 124 Q 126 144 100 142 Q 84 140 88 124 Z"
+        d="M 59 38 Q 60 24 74 24 L 138 24 Q 156 24 154 42 L 143 127 Q 142 139 154 139 L 198 139 Q 212 139 212 153 L 212 198 Q 212 216 194 216 L 60 216 Q 46 216 47 202 Z"
         fill={f}
       />
     </svg>
   );
 }
 
-// Mark + "Lifestyle" lockup. Inter 600 at -4.5% tracking per the brand spec.
 export function Wordmark({ size = 28, dark = false, gap = 10 }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap }}>
