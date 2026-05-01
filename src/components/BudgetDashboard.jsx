@@ -12,6 +12,7 @@ import MobileCardView from './mobile/MobileCardView';
 import MobileTransactionHistory from './mobile/MobileTransactionHistory';
 import MobileOverview from './mobile/MobileOverview';
 import MobileGoalCards from './mobile/MobileGoalCards';
+import MobileAddTransactionModal from './mobile/MobileAddTransactionModal';
 
 const SpendingCharts = lazy(() => import('./SpendingCharts'));
 
@@ -37,6 +38,8 @@ export default function BudgetDashboard({
   onUpdateCategory, onDeleteCategory, onAddCategory,
   recurringItems, onAddRecurring, onUpdateRecurring, onToggleRecurring, onDeleteRecurring,
   goals, onAddGoal, onUpdateGoal, onDeleteGoal,
+  allExpenses, allIncome,
+  darkMode,
 }) {
   const [mobileTab, setMobileTab] = useState('overview');
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -137,6 +140,8 @@ export default function BudgetDashboard({
             incomeCategories={incomeCategories}
             expenses={expenses}
             income={income}
+            allExpenses={allExpenses}
+            allIncome={allIncome}
             month={month}
           />
         )}
@@ -177,18 +182,16 @@ export default function BudgetDashboard({
                 onAdd={(cat) => onAddCategory('income', cat)}
               />
             </div>
-            {isCurrentMonth && (
-              <RecurringManager
-                recurring={recurringItems}
-                expenseCategories={expenseCategories}
-                incomeCategories={incomeCategories}
-                onAdd={onAddRecurring}
-                onUpdate={onUpdateRecurring}
-                onToggle={onToggleRecurring}
-                onDelete={onDeleteRecurring}
-                onUpdateCategory={onUpdateCategory}
-              />
-            )}
+            <RecurringManager
+              recurring={recurringItems}
+              expenseCategories={expenseCategories}
+              incomeCategories={incomeCategories}
+              onAdd={onAddRecurring}
+              onUpdate={onUpdateRecurring}
+              onToggle={onToggleRecurring}
+              onDelete={onDeleteRecurring}
+              onUpdateCategory={onUpdateCategory}
+            />
           </>
         )}
 
@@ -199,6 +202,7 @@ export default function BudgetDashboard({
             expenseCategories={expenseCategories}
             profile={profile}
             onAddCard={onAddCard}
+            onUpdateCard={onUpdateCard}
             onDeleteCard={onDeleteCard}
           />
         )}
@@ -210,26 +214,17 @@ export default function BudgetDashboard({
         <span>Add Transaction</span>
       </button>
 
-      {/* ── Add Transaction bottom sheet ── */}
+      {/* ── Add Transaction bottom sheet (mobile) ── */}
       {showAddSheet && (
-        <div className="budget-sheet-overlay" onClick={() => setShowAddSheet(false)}>
-          <div className="budget-sheet" onClick={e => e.stopPropagation()}>
-            <div className="budget-sheet-handle" />
-            <div className="budget-sheet-header">
-              <span className="budget-sheet-title">Add Transaction</span>
-              <button className="budget-sheet-close" onClick={() => setShowAddSheet(false)}>
-                <span className="material-icons">close</span>
-              </button>
-            </div>
-            <AddTransaction
-              expenseCategories={expenseCategories}
-              incomeCategories={incomeCategories}
-              onAddExpense={(e) => { onAddExpense(e); setShowAddSheet(false); }}
-              onAddIncome={(i) => { onAddIncome(i); setShowAddSheet(false); }}
-              cards={cards}
-            />
-          </div>
-        </div>
+        <MobileAddTransactionModal
+          expenseCategories={expenseCategories}
+          incomeCategories={incomeCategories}
+          cards={cards}
+          onAddExpense={(e) => { onAddExpense(e); setShowAddSheet(false); }}
+          onAddIncome={(i) => { onAddIncome(i); setShowAddSheet(false); }}
+          onClose={() => setShowAddSheet(false)}
+          darkMode={darkMode}
+        />
       )}
 
       {/* ── Desktop layout (hidden on mobile) ── */}
@@ -264,6 +259,8 @@ export default function BudgetDashboard({
               incomeCategories={incomeCategories}
               expenses={expenses}
               income={income}
+              allExpenses={allExpenses}
+              allIncome={allIncome}
               userId={userId}
               month={month}
             />
@@ -305,18 +302,16 @@ export default function BudgetDashboard({
               incomeTransactions={income}
             />
           </Suspense>
-          {isCurrentMonth && (
-            <RecurringManager
-              recurring={recurringItems}
-              expenseCategories={expenseCategories}
-              incomeCategories={incomeCategories}
-              onAdd={onAddRecurring}
-              onUpdate={onUpdateRecurring}
-              onToggle={onToggleRecurring}
-              onDelete={onDeleteRecurring}
-              onUpdateCategory={onUpdateCategory}
-            />
-          )}
+          <RecurringManager
+            recurring={recurringItems}
+            expenseCategories={expenseCategories}
+            incomeCategories={incomeCategories}
+            onAdd={onAddRecurring}
+            onUpdate={onUpdateRecurring}
+            onToggle={onToggleRecurring}
+            onDelete={onDeleteRecurring}
+            onUpdateCategory={onUpdateCategory}
+          />
           <div className="analytics-row budget-lower-categories">
             <CategoryList
               title="Spending by Category"

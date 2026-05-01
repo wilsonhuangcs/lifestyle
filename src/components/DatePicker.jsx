@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const CALENDAR_H = 310;
 
-export default function DatePicker({ value, onChange }) {
+export default function DatePicker({ value, onChange, forceUp = false, renderTrigger, mobile = false }) {
   const [open, setOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef(null);
@@ -13,7 +14,28 @@ export default function DatePicker({ value, onChange }) {
   const [viewYear, setViewYear] = useState(selected.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected.getMonth());
 
-  const isDark = document.querySelector('.app-shell')?.classList.contains('dark') ?? false;
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const computePos = (rect) => {
+    const measuredH = dropdownRef.current?.offsetHeight || CALENDAR_H;
+    const DROPDOWN_H = forceUp ? CALENDAR_H : measuredH;
+    const GAP = forceUp ? 140 : 6;
+    const spaceBelow = window.innerHeight - rect.bottom - GAP;
+    const top = forceUp || spaceBelow < DROPDOWN_H
+      ? Math.max(8, rect.top - DROPDOWN_H - GAP)
+      : rect.bottom + GAP;
+    return { top, left: rect.left, width: rect.width };
+  };
+
+  const handleToggle = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) setDropdownPos(computePos(rect));
+    setOpen(true);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -26,19 +48,24 @@ export default function DatePicker({ value, onChange }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const updatePos = () => {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (rect) setDropdownPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
-  };
-
   useEffect(() => {
     if (open) {
       setViewYear(selected.getFullYear());
       setViewMonth(selected.getMonth());
-      updatePos();
-      window.addEventListener('scroll', updatePos, true);
-      return () => window.removeEventListener('scroll', updatePos, true);
     }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const calcPos = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (rect) setDropdownPos(computePos(rect));
+    };
+    const t = setTimeout(() => window.addEventListener('scroll', calcPos, true), 50);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('scroll', calcPos, true);
+    };
   }, [open]);
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -82,16 +109,22 @@ export default function DatePicker({ value, onChange }) {
 
   return (
     <div className="datepicker" ref={triggerRef}>
-      <button type="button" className="datepicker-trigger" onClick={() => setOpen(!open)}>
-        <span className="datepicker-icon">&#128197;</span>
-        <span className="datepicker-value">{displayDate}</span>
-        <span className="datepicker-caret">&#9662;</span>
-      </button>
+      {renderTrigger ? (
+        <div onClick={handleToggle} style={{ cursor: 'pointer' }}>
+          {renderTrigger({ display: displayDate, selected, isOpen: open })}
+        </div>
+      ) : (
+        <button type="button" className="datepicker-trigger" onClick={handleToggle}>
+          <span className="datepicker-icon">&#128197;</span>
+          <span className="datepicker-value">{displayDate}</span>
+          <span className="datepicker-caret">&#9662;</span>
+        </button>
+      )}
       {open && createPortal(
         <div className={isDark ? 'dark' : ''}>
           <div
             ref={dropdownRef}
-            className="datepicker-dropdown"
+            className={`datepicker-dropdown ${mobile ? 'datepicker-dropdown-mobile' : ''}`}
             style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
           >
             <div className="datepicker-nav">

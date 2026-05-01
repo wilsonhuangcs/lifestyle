@@ -291,7 +291,7 @@ function GoalCard({ goal, onEdit, onDelete, isDragging, isDragOver, onDragStart,
   );
 }
 
-export default function GoalCards({ goals, onAddGoal, onUpdateGoal, onDeleteGoal, expenseCategories = [], incomeCategories = [], expenses = [], income = [], userId, month }) {
+export default function GoalCards({ goals, onAddGoal, onUpdateGoal, onDeleteGoal, expenseCategories = [], incomeCategories = [], expenses = [], income = [], allExpenses = [], allIncome = [], userId, month }) {
   const [showForm, setShowForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const titleKey = `goalsTitle:${userId}`;
@@ -304,12 +304,36 @@ export default function GoalCards({ goals, onAddGoal, onUpdateGoal, onDeleteGoal
   const dragId = useRef(null);
   const localOrderRef = useRef(null);
 
+  // For savings goals, merge all-time data with current month's live data (dedup by id)
+  const mergedExpenses = useMemo(() => {
+    const map = new Map(allExpenses.map(t => [t.id, t]));
+    expenses.forEach(t => map.set(t.id, t));
+    return [...map.values()];
+  }, [allExpenses, expenses]);
+
+  const mergedIncome = useMemo(() => {
+    const map = new Map(allIncome.map(t => [t.id, t]));
+    income.forEach(t => map.set(t.id, t));
+    return [...map.values()];
+  }, [allIncome, income]);
+
   // Compute savedAmount from linked category transactions, scoped to the goal's period
   const goalsWithComputed = useMemo(() => goals.map(g => {
     if (!g.categoryId) return g;
-    const txns = g.categoryType === 'income' ? income : expenses;
     const now = new Date();
     const today = now.toISOString().slice(0, 10);
+
+    if (g.goalType === 'limit') {
+      // Limit goals: current month only
+      const txns = g.categoryType === 'income' ? income : expenses;
+      const fromTransactions = txns
+        .filter(t => t.categoryId === g.categoryId)
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      return { ...g, savedAmount: fromTransactions };
+    }
+
+    // Savings goals: all-time transactions merged with current month's live data
+    const txns = g.categoryType === 'income' ? mergedIncome : mergedExpenses;
     const filtered = txns.filter(t => {
       if (t.categoryId !== g.categoryId) return false;
       const d = t.date?.slice(0, 10);
@@ -328,11 +352,8 @@ export default function GoalCards({ goals, onAddGoal, onUpdateGoal, onDeleteGoal
       return true;
     });
     const fromTransactions = filtered.reduce((sum, t) => sum + (t.amount || 0), 0);
-    if (g.goalType === 'limit') {
-      return { ...g, savedAmount: fromTransactions };
-    }
     return { ...g, savedAmount: (g.savedAmount || 0) + fromTransactions };
-  }), [goals, expenses, income]);
+  }), [goals, expenses, income, mergedExpenses, mergedIncome, month]);
 
   // Apply local drag-reorder on top of computed goals
   const orderedGoals = useMemo(() => {

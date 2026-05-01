@@ -1,7 +1,7 @@
-import { useMemo, useState, lazy, Suspense } from 'react';
+import { useMemo, useState, lazy, Suspense, useEffect } from 'react';
 import { formatDate } from './shared/utils';
 import { useAuth } from './hooks/useAuth';
-import { useMonth, useBudget, useExpenses, useIncome } from './hooks/useSupabase';
+import { useMonth, useBudget, useExpenses, useIncome, useAllExpenses, useAllIncome } from './hooks/useSupabase';
 import { useRecurring } from './hooks/useRecurring';
 import { useCategoryManager } from './hooks/useCategoryManager';
 import { useProfile } from './hooks/useProfile';
@@ -39,6 +39,10 @@ export default function App() {
     localStorage.setItem('darkMode', next);
     return next;
   });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
   const [activeWorkoutId, setActiveWorkoutId] = useState(null);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [exercisePickerCallback, setExercisePickerCallback] = useState(null);
@@ -59,6 +63,8 @@ export default function App() {
   } = useBudget(user?.id, month);
   const [expenses, addExpense, updateExpense, deleteExpense, expensesLoading] = useExpenses(user?.id, month);
   const [income, addIncome, updateIncome, deleteIncome, incomeLoading] = useIncome(user?.id, month);
+  const allExpenses = useAllExpenses(user?.id);
+  const allIncome = useAllIncome(user?.id);
   const {
     items: recurringItems,
     loading: recurringLoading,
@@ -403,6 +409,8 @@ export default function App() {
             onAddRecurring={addRecurring} onUpdateRecurring={updateRecurring}
             onToggleRecurring={toggleRecurring} onDeleteRecurring={deleteRecurring}
             goals={goals} onAddGoal={addGoal} onUpdateGoal={updateGoal} onDeleteGoal={deleteGoal}
+            allExpenses={allExpenses} allIncome={allIncome}
+            darkMode={darkMode}
           />
         </div>
       </main>

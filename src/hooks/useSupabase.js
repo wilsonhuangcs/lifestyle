@@ -234,3 +234,27 @@ export function useExpenses(userId, month) {
 export function useIncome(userId, month) {
   return useMonthlyTransactions('income', userId, month);
 }
+
+function useAllTransactions(table, userId) {
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    supabase
+      .from(table)
+      .select('id, category_id, amount, date')
+      .eq('user_id', userId)
+      .then(({ data }) => {
+        if (!cancelled && data) {
+          setItems(data.map(r => ({ id: r.id, categoryId: r.category_id, amount: r.amount, date: r.date })));
+        }
+      });
+    return () => { cancelled = true; };
+  }, [userId, table]);
+
+  return items;
+}
+
+export function useAllExpenses(userId) { return useAllTransactions('expenses', userId); }
+export function useAllIncome(userId) { return useAllTransactions('income', userId); }

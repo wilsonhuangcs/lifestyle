@@ -16,11 +16,23 @@ const PERIOD_LABEL = {
 const LONG_PRESS_MS = 350;
 const LONG_PRESS_CANCEL_PX = 8;
 
-function computeSavedAmount(g, expenses, income, month) {
+function computeSavedAmount(g, expenses, income, allExpenses, allIncome, month) {
   if (!g.categoryId) return g.savedAmount || 0;
-  const txns = g.categoryType === 'income' ? income : expenses;
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
+
+  if (g.goalType === 'limit') {
+    const txns = g.categoryType === 'income' ? income : expenses;
+    return txns.filter(t => t.categoryId === g.categoryId).reduce((s, t) => s + (t.amount || 0), 0);
+  }
+
+  // Savings goals: merge all-time + current month (dedup by id)
+  const base = g.categoryType === 'income' ? allIncome : allExpenses;
+  const current = g.categoryType === 'income' ? income : expenses;
+  const map = new Map(base.map(t => [t.id, t]));
+  current.forEach(t => map.set(t.id, t));
+  const txns = [...map.values()];
+
   const filtered = txns.filter(t => {
     if (t.categoryId !== g.categoryId) return false;
     const d = t.date?.slice(0, 10);
@@ -37,7 +49,7 @@ function computeSavedAmount(g, expenses, income, month) {
     return true;
   });
   const fromTxns = filtered.reduce((s, t) => s + (t.amount || 0), 0);
-  return g.goalType === 'limit' ? fromTxns : (g.savedAmount || 0) + fromTxns;
+  return (g.savedAmount || 0) + fromTxns;
 }
 
 function MobileGoalCard({ goal, savedAmount, onEdit, onDelete, isDragging, onCardPointerDown, cardRef }) {
@@ -114,7 +126,7 @@ function MobileGoalCard({ goal, savedAmount, onEdit, onDelete, isDragging, onCar
 export default function MobileGoalCards({
   goals, onAddGoal, onUpdateGoal, onDeleteGoal,
   expenseCategories = [], incomeCategories = [],
-  expenses = [], income = [], month,
+  expenses = [], income = [], allExpenses = [], allIncome = [], month,
 }) {
   const [showForm, setShowForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
@@ -126,8 +138,8 @@ export default function MobileGoalCards({
   const orderedGoalsRef = useRef([]);
 
   const goalsWithSaved = useMemo(
-    () => goals.map(g => ({ ...g, savedAmount: computeSavedAmount(g, expenses, income, month) })),
-    [goals, expenses, income, month]
+    () => goals.map(g => ({ ...g, savedAmount: computeSavedAmount(g, expenses, income, allExpenses, allIncome, month) })),
+    [goals, expenses, income, allExpenses, allIncome, month]
   );
 
   const orderedGoals = useMemo(() => {

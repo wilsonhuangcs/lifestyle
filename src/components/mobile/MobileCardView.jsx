@@ -52,9 +52,10 @@ function ChipIcon() {
   );
 }
 
-export default function MobileCardView({ cards, expenses, expenseCategories, profile, onAddCard, onDeleteCard }) {
+export default function MobileCardView({ cards, expenses, expenseCategories, profile, onAddCard, onUpdateCard, onDeleteCard }) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showForm, setShowForm] = useState(false);
+  const [editingCard, setEditingCard] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const carouselRef = useRef(null);
@@ -113,6 +114,22 @@ export default function MobileCardView({ cards, expenses, expenseCategories, pro
     await onAddCard({ name: form.name.trim(), lastFour: form.lastFour, cardType: form.cardType, bank: form.bank, color: bank.color });
     setForm(EMPTY_FORM);
     setShowForm(false);
+    setSaving(false);
+  };
+
+  const handleEditOpen = (card) => {
+    setEditingCard(card);
+    setForm({ name: card.name, lastFour: card.lastFour, cardType: card.cardType || 'visa', bank: card.bank || 'other' });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || form.lastFour.length !== 4) return;
+    setSaving(true);
+    const bank = BANK_MAP[form.bank] || BANK_MAP.other;
+    await onUpdateCard(editingCard.id, { name: form.name.trim(), lastFour: form.lastFour, cardType: form.cardType, bank: form.bank, color: bank.color });
+    setEditingCard(null);
+    setForm(EMPTY_FORM);
     setSaving(false);
   };
 
@@ -214,16 +231,57 @@ export default function MobileCardView({ cards, expenses, expenseCategories, pro
         )}
 
           {/* Spending summary here */}
-          {selectedCard && (
+          {selectedCard && !editingCard && (
             <div className="mcv-spending-row">
               <div>
                 <div className="mcv-spending-amount">{fmt(cardTotal)}</div>
                 <div className="mcv-spending-label">spent this month</div>
               </div>
-              <button className="mcv-remove-btn" onClick={() => { onDeleteCard(selectedCard.id); setSelectedIdx(0); }}>
-                Remove card
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="mcv-edit-btn" onClick={() => handleEditOpen(selectedCard)}>
+                  Edit
+                </button>
+                <button className="mcv-remove-btn" onClick={() => { onDeleteCard(selectedCard.id); setSelectedIdx(0); }}>
+                  Remove
+                </button>
+              </div>
             </div>
+          )}
+
+          {/* Edit card form */}
+          {editingCard && (
+            <form className="card-add-form mcv-form" onSubmit={handleEditSubmit}>
+              <div className="form-group">
+                <label>Bank</label>
+                <div className="select-wrapper">
+                  <select value={form.bank} onChange={e => handleBankChange(e.target.value)}>
+                    {BANKS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Card Name</label>
+                <input className="form-input" placeholder="e.g. Chase Sapphire Reserve"
+                  value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Last 4 Digits</label>
+                <input className="form-input" placeholder="1234" maxLength={4} inputMode="numeric"
+                  value={form.lastFour} onChange={e => setForm(f => ({ ...f, lastFour: e.target.value.replace(/\D/g, '') }))} />
+              </div>
+              <div className="form-group">
+                <label>Network</label>
+                <div className="select-wrapper">
+                  <select value={form.cardType} onChange={e => setForm(f => ({ ...f, cardType: e.target.value }))}>
+                    {NETWORKS.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="card-form-actions">
+                <button type="submit" className="card-form-save" disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</button>
+                <button type="button" className="card-form-cancel" onClick={() => { setEditingCard(null); setForm(EMPTY_FORM); }}>Cancel</button>
+              </div>
+            </form>
           )}
 
           {/* Card transactions — only when a real card is selected */}

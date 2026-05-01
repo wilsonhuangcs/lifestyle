@@ -1777,9 +1777,9 @@ body {
   gap: 3px;
 }
 .mov-hero .sc-cell {
-  aspect-ratio: unset;
-  height: 36px;
-  border-radius: 6px;
+  aspect-ratio: 1;
+  height: auto;
+  border-radius: 8px;
   padding: 2px;
 }
 .mov-hero .sc-day-num {
@@ -8620,6 +8620,47 @@ body {
   .mobile-add-transaction {
     padding: 16px;
   }
+
+  /* Analytics tab — force vertical stacking and shrink chart sizing */
+  .budget-mobile-content .analytics-row {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  .budget-mobile-content .analytics-row > .card,
+  .budget-mobile-content .analytics-row > .chart-section-card {
+    flex: unset;
+    width: 100%;
+    padding: 16px;
+  }
+  .budget-mobile-content .donut-layout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .budget-mobile-content .donut-chart-wrap {
+    flex: unset;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .budget-mobile-content .donut-chart-container {
+    width: 240px;
+    max-width: 100%;
+  }
+  .budget-mobile-content .donut-legend {
+    width: 100%;
+  }
+  .budget-mobile-content .donut-panel {
+    width: 100%;
+  }
+  /* Recurring manager fits within mobile width */
+  .budget-mobile-content .rm-root,
+  .budget-mobile-content .rm-list,
+  .budget-mobile-content .recurring-manager {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* ─── Mobile Card View (MobileCardView.jsx) ─── */
@@ -8835,6 +8876,23 @@ body {
 
 .mcv-remove-btn:hover {
   background: rgba(239,68,68,0.22);
+}
+
+.mcv-edit-btn {
+  background: rgba(99,102,241,0.10);
+  color: #6366f1;
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.mcv-edit-btn:hover {
+  background: rgba(99,102,241,0.20);
 }
 
 /* Transaction list */
@@ -9826,8 +9884,8 @@ body {
     background: rgba(250,250,250,0.96);
     border-top: 1px solid #e4e5f1;
     border-radius: 20px 20px 0 0;
-    padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
-    max-height: 85vh;
+    padding: 12px 20px calc(80px + env(safe-area-inset-bottom));
+    max-height: 92vh;
     overflow-y: auto;
     animation: slideUp 0.25s ease;
   }
@@ -9905,6 +9963,8 @@ body {
   --color-divider:          #444444;
 }
 
+html.dark,
+html.dark body,
 .dark body,
 .dark {
   background: #0d0d0d;
@@ -10717,3 +10777,67 @@ body {
 
 .dark .goal-card--drag-over { box-shadow: 0 0 0 2px #888888; }
 .dark .goal-color-swatch.selected { border-color: #888888; }
+
+/* ─── Dark Mode: Mobile Add Transaction Sheet ─── */
+.dark .budget-sheet {
+  background: rgba(18,18,20,0.97);
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+
+.dark .budget-sheet-handle {
+  background: rgba(255,255,255,0.15);
+}
+
+.dark .budget-sheet-title {
+  color: #E0E0E0;
+}
+
+.dark .budget-sheet-close {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: #B0B0B0;
+}
+
+/* ─── Mobile Add Transaction — horizontal scroll rows ─── */
+.modal-cat-scroll::-webkit-scrollbar {
+  display: none;
+}
+.modal-cat-scroll {
+  scrollbar-width: none;
+}
+
+/* DatePicker — mobile (modal) variant */
+.datepicker-dropdown.datepicker-dropdown-mobile {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.09);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+}
+.dark .datepicker-dropdown.datepicker-dropdown-mobile {
+  background: #141413;
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.55);
+}
+/* Force input backgrounds to match the modal — overrides any browser default */
+.matm-input-clear,
+.matm-input-clear:focus,
+.matm-input-clear:focus-visible,
+.matm-input-clear:active,
+.matm-input-clear:hover,
+.matm-input-clear:-webkit-autofill,
+.matm-input-clear:-webkit-autofill:hover,
+.matm-input-clear:-webkit-autofill:focus {
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  -webkit-box-shadow: none !important;
+  box-shadow: none !important;
+  -webkit-text-fill-color: inherit !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  color-scheme: light !important;
+}
