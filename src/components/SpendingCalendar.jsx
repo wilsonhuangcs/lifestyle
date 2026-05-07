@@ -6,8 +6,9 @@ const formatCurrency = (amount) =>
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const lsKey = (userId) => `sc_daily_budget_override:${userId}`;
 
-function getDayColor(net, dailyBudget, isFuture, hasActivity) {
-  if (isFuture || !hasActivity) return null;
+function getDayColor(net, dailyBudget, isFuture, hasActivity, isPast) {
+  if (isFuture) return null;
+  if (!hasActivity) return isPast ? 'under' : null;
   if (net <= 0) return 'under'; // income >= expenses → surplus, always green
   if (dailyBudget <= 0) return 'under';
   if (net < dailyBudget) return 'under';
@@ -94,6 +95,7 @@ export default function SpendingCalendar({ expenses, income = [], effectiveBudge
 
   const now = new Date();
   const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === mon;
+  const isPastMonth = year < now.getFullYear() || (year === now.getFullYear() && mon < now.getMonth() + 1);
 
   const handleMouseEnter = (e, day) => {
     if (!day) return;
@@ -126,9 +128,10 @@ export default function SpendingCalendar({ expenses, income = [], effectiveBudge
       <div className="sc-grid" onMouseLeave={() => setTooltip(null)}>
         {cells.map((day, idx) => {
           if (!day) return <div key={`blank-${idx}`} className="sc-cell sc-cell--blank" />;
-          const isFuture = isCurrentMonth && day > now.getDate();
+          const isFuture = isCurrentMonth ? day > now.getDate() : !isPastMonth;
+          const isPast = isPastMonth || (isCurrentMonth && day < now.getDate());
           const data = dailyTotals.get(day);
-          const colorClass = getDayColor(data?.net ?? 0, dailyBudget, isFuture, !!data);
+          const colorClass = getDayColor(data?.net ?? 0, dailyBudget, isFuture, !!data, isPast);
           const isToday = day === today;
           return (
             <div
@@ -137,11 +140,15 @@ export default function SpendingCalendar({ expenses, income = [], effectiveBudge
               onMouseEnter={(e) => handleMouseEnter(e, day)}
             >
               <span className="sc-day-num">{day}</span>
-              {data && !isFuture && (
+              {!isFuture && (data ? (
                 <span className={`sc-day-amount ${data.net < 0 ? 'sc-day-amount--gain' : ''}`}>
                   {data.net < 0 ? '+' : data.net > 0 ? '−' : ''}{formatCurrency(Math.abs(data.net))}
                 </span>
-              )}
+              ) : isPast && (
+                <span className="sc-day-amount">
+                  {formatCurrency(0)}
+                </span>
+              ))}
             </div>
           );
         })}

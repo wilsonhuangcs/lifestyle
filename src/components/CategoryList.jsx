@@ -89,13 +89,12 @@ export default function CategoryList({
         <p className="empty-message">Set your budget to see progress bars.</p>
       )}
 
-      {!editing && [...categories].filter(c => (spendingByCategory?.get(c.id) || 0) > 0).length === 0 && (
-        <p className="empty-message">No transactions yet.</p>
+      {!editing && categories.length === 0 && (
+        <p className="empty-message">No categories yet.</p>
       )}
 
       <div className="categories">
         {(editing ? categories : [...categories]
-          .filter(c => (spendingByCategory?.get(c.id) || 0) > 0)
           .sort((a, b) => (spendingByCategory?.get(b.id) || 0) - (spendingByCategory?.get(a.id) || 0))
         ).map((cat) => {
           const spent = spendingByCategory ? (spendingByCategory.get(cat.id) || 0) : 0;

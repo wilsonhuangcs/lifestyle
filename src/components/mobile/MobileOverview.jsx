@@ -144,7 +144,7 @@ export default function MobileOverview({
       {recentExpenses.length > 0 && (
         <div className="mov-section">
           <div className="mov-section-header">
-            <h3 className="mov-section-title">Spend</h3>
+            <h3 className="mov-section-title">Expenses</h3>
             <button className="mov-see-all" onClick={onGoToTransactions}>See all</button>
           </div>
           <ul className="mov-txn-list">

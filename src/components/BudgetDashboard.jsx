@@ -9,9 +9,10 @@ import TransactionHistory from './TransactionHistory';
 import RecurringManager from './RecurringManager';
 import CategoryList from './CategoryList';
 import MobileCardView from './mobile/MobileCardView';
-import MobileTransactionHistory from './mobile/MobileTransactionHistory';
+import MobileTransactionsTab from './mobile/MobileTransactionsTab';
 import MobileOverview from './mobile/MobileOverview';
 import MobileGoalCards from './mobile/MobileGoalCards';
+import MobileAnalytics from './mobile/MobileAnalytics';
 import MobileAddTransactionModal from './mobile/MobileAddTransactionModal';
 
 const SpendingCharts = lazy(() => import('./SpendingCharts'));
@@ -117,17 +118,18 @@ export default function BudgetDashboard({
         )}
 
         {mobileTab === 'transactions' && (
-          <>
-            <MobileTransactionHistory
-              expenses={expenses}
-              income={income}
-              expenseCategories={expenseCategories}
-              incomeCategories={incomeCategories}
-              onDeleteExpense={onDeleteExpense}
-              onDeleteIncome={onDeleteIncome}
-              onExportPDF={handleExportPDF}
-            />
-          </>
+          <MobileTransactionsTab
+            expenses={expenses}
+            income={income}
+            expenseCategories={expenseCategories}
+            incomeCategories={incomeCategories}
+            onDeleteExpense={onDeleteExpense}
+            onDeleteIncome={onDeleteIncome}
+            onExportPDF={handleExportPDF}
+            recurringItems={recurringItems}
+            onAddRecurring={onAddRecurring}
+            darkMode={darkMode}
+          />
         )}
 
         {mobileTab === 'goals' && (
@@ -147,52 +149,16 @@ export default function BudgetDashboard({
         )}
 
         {mobileTab === 'analytics' && (
-          <>
-            <Suspense fallback={null}>
-              <SpendingCharts
-                expenses={expenses}
-                income={income}
-                expenseCategories={expenseCategories}
-                incomeCategories={incomeCategories}
-                totalSpent={totalSpent}
-                totalIncome={totalIncome}
-                transactions={expenses}
-                incomeTransactions={income}
-              />
-            </Suspense>
-            <div className="analytics-row">
-              <CategoryList
-                title="Spending by Category"
-                categories={expenseCategories}
-                spendingByCategory={spendingByCategory}
-                transactions={expenses}
-                budget={effectiveBudget}
-                onUpdate={onUpdateCategory}
-                onDelete={onDeleteCategory}
-                onAdd={(cat) => onAddCategory('expense', cat)}
-              />
-              <CategoryList
-                title="Income by Category"
-                categories={incomeCategories}
-                spendingByCategory={incomeByCategory}
-                transactions={income}
-                budget={totalIncome || 1}
-                onUpdate={onUpdateCategory}
-                onDelete={onDeleteCategory}
-                onAdd={(cat) => onAddCategory('income', cat)}
-              />
-            </div>
-            <RecurringManager
-              recurring={recurringItems}
-              expenseCategories={expenseCategories}
-              incomeCategories={incomeCategories}
-              onAdd={onAddRecurring}
-              onUpdate={onUpdateRecurring}
-              onToggle={onToggleRecurring}
-              onDelete={onDeleteRecurring}
-              onUpdateCategory={onUpdateCategory}
-            />
-          </>
+          <MobileAnalytics
+            expenseCategories={expenseCategories}
+            incomeCategories={incomeCategories}
+            spendingByCategory={spendingByCategory}
+            incomeByCategory={incomeByCategory}
+            totalSpent={totalSpent}
+            totalIncome={totalIncome}
+            monthLabel={monthLabel}
+            darkMode={darkMode}
+          />
         )}
 
         {mobileTab === 'cards' && (
@@ -209,9 +175,8 @@ export default function BudgetDashboard({
       </div>
 
       {/* ── Mobile FAB ── */}
-      <button className="budget-fab" onClick={() => setShowAddSheet(true)}>
+      <button className="budget-fab" onClick={() => setShowAddSheet(true)} aria-label="Add transaction">
         <span className="material-icons">add</span>
-        <span>Add Transaction</span>
       </button>
 
       {/* ── Add Transaction bottom sheet (mobile) ── */}
