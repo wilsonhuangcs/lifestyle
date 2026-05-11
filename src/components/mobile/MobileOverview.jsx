@@ -103,13 +103,13 @@ export default function MobileOverview({
         <div className="mov-summary-half">
           <span className="mov-summary-label">Income</span>
           <span className="mov-summary-income">{fmt(totalIncome)}</span>
-          <button className="mov-summary-add" onClick={onGoToTransactions}>+ Add Income</button>
+          <button className="mov-summary-add" onClick={onGoToTransactions}>See All</button>
         </div>
         <div className="mov-summary-divider" />
         <div className="mov-summary-half">
           <span className="mov-summary-label">Expense</span>
           <span className="mov-summary-expense">{fmt(totalSpent)}</span>
-          <button className="mov-summary-add" onClick={onGoToTransactions}>+ Add Expense</button>
+          <button className="mov-summary-add" onClick={onGoToTransactions}>See All</button>
         </div>
       </div>
 

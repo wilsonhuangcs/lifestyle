@@ -9674,6 +9674,7 @@ body {
   align-items: center;
   padding: 10px 16px;
   gap: 0;
+  margin-bottom: 16px;
 }
 
 .mov-summary-half {
@@ -10620,6 +10621,7 @@ html.dark body,
 
 /* Keep status colors intact */
 .dark .mov-summary-income,
+.dark .mov-income-amount,
 .dark .income-amount,
 .dark .income-value { color: #22c55e !important; }
 
