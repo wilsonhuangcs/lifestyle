@@ -6,6 +6,7 @@ import { useRecurring } from './hooks/useRecurring';
 import { useCategoryManager } from './hooks/useCategoryManager';
 import { useProfile } from './hooks/useProfile';
 import { useExercises } from './hooks/useExercises';
+import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useWorkouts } from './hooks/useWorkouts';
 import { useWorkoutTemplates } from './hooks/useWorkoutTemplates';
 import { useRecovery } from './hooks/useRecovery';
@@ -19,6 +20,8 @@ import MobileNavBar from './components/MobileNavBar';
 import BudgetDashboard from './components/BudgetDashboard';
 import ProfilePage from './components/ProfilePage';
 import GymDashboard from './components/gym/GymDashboard';
+import CalendarDashboard from './components/calendar/CalendarDashboard';
+import EventEditor from './components/calendar/EventEditor';
 import WorkoutLogger from './components/gym/WorkoutLogger';
 import ExercisePicker from './components/gym/ExercisePicker';
 import WorkoutHistory from './components/gym/WorkoutHistory';
@@ -96,6 +99,34 @@ export default function App() {
     logRecovery, loading: recoveryLoading,
   } = useRecovery(gymUserId);
   const { prs, loading: prsLoading, checkIsPR, detectAndSaveWorkoutPRs } = usePRs(gymUserId);
+
+  // Calendar hooks — activate globally so the unread Discord badge updates
+  // even when the user is on another section. Cost is negligible (one query + one realtime channel).
+  const {
+    events: calendarEvents,
+    loading: calendarLoading,
+    addEvent: addCalendarEvent,
+    updateEvent: updateCalendarEvent,
+    deleteEvent: deleteCalendarEvent,
+    markAllDiscordRead,
+    unreadDiscordCount,
+  } = useCalendarEvents(user?.id);
+  const [editingEvent, setEditingEvent] = useState(null); // event obj | { defaultDate } | null
+
+  // When the user opens the calendar, clear the unread badge on Discord-sourced events.
+  useEffect(() => {
+    if (page === 'calendar' && unreadDiscordCount > 0) {
+      markAllDiscordRead();
+    }
+  }, [page, unreadDiscordCount, markAllDiscordRead]);
+
+  const handleSaveCalendarEvent = async (fields) => {
+    if (editingEvent && editingEvent.id) {
+      await updateCalendarEvent(editingEvent.id, fields);
+    } else {
+      await addCalendarEvent(fields);
+    }
+  };
 
   // Budget derived data
   const totalSpent = useMemo(
@@ -223,6 +254,8 @@ export default function App() {
     return <Auth onSignIn={signIn} onSignUp={signUp} />;
   }
 
+  const navBadges = { calendar: unreadDiscordCount };
+
   const navbarProps = {
     user,
     profile,
@@ -232,6 +265,7 @@ export default function App() {
     onOpenProfile: () => setPage('profile'),
     darkMode,
     onToggleDark: toggleDarkMode,
+    badges: navBadges,
   };
 
   if (budgetLoading || expensesLoading || incomeLoading || recurringLoading || categoriesLoading || profileLoading || cardsLoading || goalsLoading) {
@@ -244,7 +278,7 @@ export default function App() {
             <div className="loading">Loading...</div>
           </div>
         </main>
-        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
+        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} badges={navBadges} />
       </div>
     );
   }
@@ -266,7 +300,7 @@ export default function App() {
             />
           </div>
         </main>
-        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
+        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} badges={navBadges} />
       </div>
     );
   }
@@ -283,7 +317,7 @@ export default function App() {
               <div className="loading">Loading gym...</div>
             </div>
           </main>
-          <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
+          <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} badges={navBadges} />
         </div>
       );
     }
@@ -375,7 +409,53 @@ export default function App() {
             )}
           </div>
         </main>
-        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
+        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} badges={navBadges} />
+      </div>
+    );
+  }
+
+  // Calendar page
+  if (page === 'calendar') {
+    if (calendarLoading) {
+      return (
+        <div className={`app-shell${darkMode ? " dark" : ""}`}>
+          <Sidebar {...navbarProps} />
+          <main className="main-area">
+            <Navbar {...navbarProps} />
+            <div className="page-content">
+              <div className="loading">Loading calendar...</div>
+            </div>
+          </main>
+          <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} badges={navBadges} />
+        </div>
+      );
+    }
+
+    return (
+      <div className={`app-shell${darkMode ? " dark" : ""}`}>
+        <Sidebar {...navbarProps} />
+        <main className="main-area">
+          <Navbar {...navbarProps} />
+          <div className="page-content">
+            <CalendarDashboard
+              events={calendarEvents}
+              unreadDiscordCount={unreadDiscordCount}
+              onAddEvent={() => setEditingEvent({})}
+              onSelectEvent={(ev) => setEditingEvent(ev)}
+              onSelectDay={(dateStr) => setEditingEvent({ defaultDate: dateStr })}
+            />
+            {editingEvent && (
+              <EventEditor
+                event={editingEvent.id ? editingEvent : null}
+                defaultDate={editingEvent.defaultDate}
+                onSave={handleSaveCalendarEvent}
+                onDelete={deleteCalendarEvent}
+                onClose={() => setEditingEvent(null)}
+              />
+            )}
+          </div>
+        </main>
+        <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} badges={navBadges} />
       </div>
     );
   }
@@ -414,7 +494,7 @@ export default function App() {
           />
         </div>
       </main>
-      <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} />
+      <MobileNavBar page={page} onSetPage={setPage} darkMode={darkMode} onToggleDark={toggleDarkMode} badges={navBadges} />
     </div>
   );
 }
