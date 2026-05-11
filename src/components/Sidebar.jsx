@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Mark } from './Logo';
 
 const NAV_ITEMS = [
-  { page: 'budget', icon: 'account_balance_wallet', label: 'Budget' },
-  { page: 'gym',    icon: 'fitness_center',          label: 'Gym' },
+  { page: 'budget',   icon: 'account_balance_wallet', label: 'Budget' },
+  { page: 'gym',      icon: 'fitness_center',          label: 'Gym' },
+  { page: 'calendar', icon: 'calendar_today',          label: 'Calendar' },
 ];
 
-export default function Sidebar({ user, profile, page, onSetPage, onSignOut, onOpenProfile, darkMode, onToggleDark }) {
+export default function Sidebar({ user, profile, page, onSetPage, onSignOut, onOpenProfile, darkMode, onToggleDark, badges = {} }) {
   const [tooltip, setTooltip] = useState(null);
 
   const displayName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ');
@@ -23,24 +24,30 @@ export default function Sidebar({ user, profile, page, onSetPage, onSignOut, onO
 
       {/* Nav items */}
       <nav className="sidebar-nav">
-        {NAV_ITEMS.map(({ page: p, icon, label }) => (
-          <div
-            key={p}
-            className="sidebar-nav-item"
-            onMouseEnter={() => setTooltip(p)}
-            onMouseLeave={() => setTooltip(null)}
-          >
-            <button
-              className={`sidebar-icon-btn ${page === p ? 'active' : ''}`}
-              onClick={() => onSetPage(p)}
+        {NAV_ITEMS.map(({ page: p, icon, label }) => {
+          const badgeCount = badges[p] || 0;
+          return (
+            <div
+              key={p}
+              className="sidebar-nav-item"
+              onMouseEnter={() => setTooltip(p)}
+              onMouseLeave={() => setTooltip(null)}
             >
-              <span className="material-icons">{icon}</span>
-            </button>
-            {tooltip === p && (
-              <div className="sidebar-tooltip">{label}</div>
-            )}
-          </div>
-        ))}
+              <button
+                className={`sidebar-icon-btn ${page === p ? 'active' : ''}`}
+                onClick={() => onSetPage(p)}
+              >
+                <span className="material-icons">{icon}</span>
+                {badgeCount > 0 && (
+                  <span className="sidebar-nav-badge">{badgeCount > 9 ? '9+' : badgeCount}</span>
+                )}
+              </button>
+              {tooltip === p && (
+                <div className="sidebar-tooltip">{label}</div>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Bottom actions */}

@@ -2,6 +2,64 @@
 
 ---
 
+## 🔴 Calendar + Discord Notifications — Manual Setup [TOP PRIORITY — NEXT ACTION]
+
+> **Priority: TOP — Do this before any other todo work.** Tagged 2026-05-10 as the next action when work resumes. When asked "what's next?" or "give me the highest-priority task", surface this section first.
+>
+> **Status:** All code (Phases 0–4) is implemented and deployed. Frontend builds clean; `calendar_events` + `push_subscriptions` tables created with RLS; Realtime enabled on `calendar_events`; Edge Functions `push-test` and `discord-ingest` are live. The system will NOT function end-to-end until the manual setup below is complete. VAPID keypair generated 2026-05-10 (public key already in `.env`).
+
+### Group A — Supabase Edge Function secrets
+
+Dashboard → Project Settings → Edge Functions → Secrets (or `supabase secrets set NAME=VALUE`):
+
+- [ ] Set `VAPID_PRIVATE_KEY` = `HnaCn0oHAyxY3V7b4UCQjc6y9Ki18YU2mMl_MZzcalc` — @user — todo
+- [ ] Set `VAPID_PUBLIC_KEY` = `BJfCpgGTRHOkcTI3GisuURf7m29T7rIc8q5_WRILqcAnqe8XfFl86gQiKAS9uaCXHG0cd898t6C7TlsuLOcAhS8` — @user — todo
+- [ ] Set `VAPID_SUBJECT` = `mailto:willysonhuang@gmail.com` (optional; default is hardcoded in functions) — @user — todo
+- [ ] Set `ANTHROPIC_API_KEY` (generate at console.anthropic.com → API Keys) — @user — todo
+- [ ] Set `DISCORD_INGEST_SECRET` = any long random string (e.g. `openssl rand -hex 32`); keep the value, you'll paste it into Pipedream — @user — todo
+- [ ] Set `TARGET_USER_ID` = your auth UUID (Supabase Dashboard → Authentication → Users → click your row → copy UUID) — @user — todo
+
+### Group B — Push notification smoke test (no Discord needed)
+
+- [ ] `npm run dev` from `d:/Lifestyle/lifestyle/`, install the PWA to your phone home screen (iOS: Safari → Share → Add to Home Screen) — @user — todo
+- [ ] Open the app on phone and on desktop. Profile page → "Enable notifications" → grant permission on both devices — @user — todo
+- [ ] Click "Send test push" → verify a native notification card appears on phone AND desktop within ~5 seconds — @user — todo
+- [ ] If nothing arrives: check Supabase Edge Function logs for `push-test` (Dashboard → Edge Functions → push-test → Logs) — @user — todo
+
+### Group C — Discord wiring (Announcement Channel path)
+
+- [ ] **Precondition check:** open Discord, look at the source Pokemon channel. Does it have a megaphone icon next to the channel name AND a "Follow" button visible to members? If NO, this approach won't work — pause and pivot to manual forwarding or browser-extension bridge (separate plan) — @user — todo
+- [ ] Create your own private Discord server — @user — todo
+- [ ] In the public Pokemon server, click the announcement channel header → "Follow" → pick a channel in your private server as the cross-post target — @user — todo
+- [ ] Create a Discord application + bot at https://discord.com/developers → enable "Message Content Intent" → invite the bot to YOUR private server with `View Channel` + `Read Message History` permissions — @user — todo
+- [ ] Sign up for Pipedream (free tier) at pipedream.com — @user — todo
+- [ ] Create a Pipedream workflow:
+  - Trigger: "Discord Bot → New Message in Channel" using your bot, scoped to the mirrored channel in your private server
+  - Action: HTTP / Webhook → POST to `https://dswetxilqyzvrgocqobf.supabase.co/functions/v1/discord-ingest`
+  - Header: `Authorization: Bearer <DISCORD_INGEST_SECRET>` (the value you set in Group A)
+  - Body JSON:
+    ```json
+    {
+      "messageId": "{{steps.trigger.event.id}}",
+      "content": "{{steps.trigger.event.content}}",
+      "authorName": "{{steps.trigger.event.author.username}}",
+      "channelId": "{{steps.trigger.event.channel_id}}",
+      "timestamp": "{{steps.trigger.event.timestamp}}",
+      "jumpUrl": "https://discord.com/channels/{{steps.trigger.event.guild_id}}/{{steps.trigger.event.channel_id}}/{{steps.trigger.event.id}}"
+    }
+    ```
+  — @user — todo
+- [ ] Deploy / enable the Pipedream workflow — @user — todo
+
+### Group D — End-to-end smoke test
+
+- [ ] Post a test drop message in the mirrored channel of your private server, e.g. "Booster Bundle restock at Target this Friday 5/15 at 9am ET" — @user — todo
+- [ ] Within ~5s verify: (1) event lands on May 15 in the Calendar grid, (2) push notification arrives on phone + desktop, (3) red badge appears on the Calendar nav item, (4) tapping the notification opens the app (and ideally focuses the event) — @user — todo
+- [ ] If any step fails, check Supabase Edge Function logs for `discord-ingest` AND `push-test`; check Pipedream workflow runs for HTTP response codes — @user — todo
+- [ ] Once verified, remove the test event from the Calendar (Edit → Delete) — @user — todo
+
+---
+
 ## Budget / Expense Tracker (Shipped)
 
 - [x] Database schema: budget, expenses, income, recurring, recurring_log, user_categories, profiles tables with RLS — @backend — done

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import NotificationSettings from './NotificationSettings';
 
 export default function ProfilePage({ user, profile, onUpdateProfile, onBack, onSignOut }) {
   const [firstName, setFirstName] = useState(profile.firstName);
@@ -153,6 +154,8 @@ export default function ProfilePage({ user, profile, onUpdateProfile, onBack, on
             </button>
           </div>
         </form>
+
+        <NotificationSettings userId={user.id} />
       </div>
     </div>
   );
