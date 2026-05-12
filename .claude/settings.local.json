@@ -4,7 +4,13 @@
       "Bash(npm run *)",
       "Bash(card\" d:/Lifestyle/lifestyle/src/components/BudgetDashboard.jsx d:/Lifestyle/lifestyle/src/components/mobile/MobileCardView.jsx)",
       "Bash(grep -n \"className=\\\\\"card\\\\\"\\\\|className={`card\" d:/Lifestyle/lifestyle/src/components/BudgetDashboard.jsx d:/Lifestyle/lifestyle/src/components/mobile/MobileCardView.jsx)",
-      "Bash(grep -n \"^input\\\\|^select\\\\|input:\\\\|input,\\\\|input {\" /Users/wilson.huang/Desktop/Lifestyle/lifestyle/src/App.css)"
+      "Bash(grep -n \"^input\\\\|^select\\\\|input:\\\\|input,\\\\|input {\" /Users/wilson.huang/Desktop/Lifestyle/lifestyle/src/App.css)",
+      "Bash(git -C /Users/wilson.huang/Desktop/Lifestyle/lifestyle status --short)",
+      "mcp__claude_ai_Supabase__get_edge_function",
+      "mcp__claude_ai_Supabase__list_tables",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "mcp__claude_ai_Supabase__deploy_edge_function",
+      "Bash(openssl rand *)"
     ]
   }
 }
