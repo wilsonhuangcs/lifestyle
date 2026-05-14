@@ -1263,6 +1263,199 @@ body {
   }
 }
 
+/* Notification bell + dropdown */
+.topbar-notif-wrap {
+  position: relative;
+}
+
+.topbar-notif-wrap .topbar-icon-btn {
+  position: relative;
+}
+
+.topbar-notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 2px solid #ffffff;
+  box-sizing: content-box;
+}
+
+.dark .topbar-notif-badge {
+  border-color: #141413;
+}
+
+.topbar-notif-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(252,252,253,0.96);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.dark .topbar-notif-dropdown {
+  background: rgba(28,28,30,0.96);
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+}
+
+.topbar-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.dark .topbar-notif-header {
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+
+.topbar-notif-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e2038;
+}
+
+.dark .topbar-notif-title { color: #E8E8E8; }
+
+.topbar-notif-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.topbar-notif-action {
+  background: transparent;
+  border: 0;
+  color: #484b6a;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.topbar-notif-action:hover {
+  background: rgba(0,0,0,0.05);
+  color: #1e2038;
+}
+
+.dark .topbar-notif-action { color: rgba(232,232,232,0.65); }
+.dark .topbar-notif-action:hover { background: rgba(255,255,255,0.08); color: #E8E8E8; }
+
+.topbar-notif-empty {
+  padding: 28px 14px;
+  text-align: center;
+  font-size: 12px;
+  color: #6b6e88;
+}
+
+.dark .topbar-notif-empty { color: rgba(232,232,232,0.45); }
+
+.topbar-notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+}
+
+.topbar-notif-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  transition: background 0.12s;
+}
+
+.topbar-notif-item:last-child { border-bottom: none; }
+.topbar-notif-item:hover { background: rgba(0,0,0,0.04); }
+
+.dark .topbar-notif-item { border-bottom-color: rgba(255,255,255,0.06); }
+.dark .topbar-notif-item:hover { background: rgba(255,255,255,0.04); }
+
+.topbar-notif-item--unread {
+  background: rgba(0,0,0,0.04);
+}
+
+.dark .topbar-notif-item--unread {
+  background: rgba(255,255,255,0.05);
+}
+
+.topbar-notif-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.topbar-notif-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e2038;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark .topbar-notif-item-title { color: #E8E8E8; }
+
+.topbar-notif-item-close {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 6px;
+  color: #9ca0b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-notif-item-close .material-icons { font-size: 16px; }
+.topbar-notif-item-close:hover { background: rgba(0,0,0,0.06); color: #1e2038; }
+
+.dark .topbar-notif-item-close { color: rgba(232,232,232,0.45); }
+.dark .topbar-notif-item-close:hover { background: rgba(255,255,255,0.08); color: #E8E8E8; }
+
+.topbar-notif-item-body {
+  font-size: 12px;
+  color: #484b6a;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.dark .topbar-notif-item-body { color: rgba(232,232,232,0.65); }
+
+.topbar-notif-item-time {
+  font-size: 10px;
+  color: #9ca0b8;
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+.dark .topbar-notif-item-time { color: rgba(232,232,232,0.40); }
+
 .topbar-profile-wrap {
   position: relative;
 }
@@ -11112,37 +11305,37 @@ html.dark body,
 }
 
 /* ── Dark mode ── */
-.dark .cal-page-title { color: #f0f0f0; }
-.dark .cal-page-subtitle { color: #aaa; }
+.dark .cal-page-title { color: #E8E8E8; }
+.dark .cal-page-subtitle { color: rgba(232,232,232,0.55); }
 .dark .cal-header-stat-card {
-  background: #1a1a2e;
-  border-color: #2a2a44;
-  color: #f0f0f0;
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.10);
+  color: #E8E8E8;
 }
 .dark .cal-grid-card {
-  background: #1a1a2e;
-  border-color: #2a2a44;
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.10);
 }
 .dark .cal-grid {
-  background: #2a2a44;
-  border-color: #2a2a44;
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.10);
 }
-.dark .cal-cell { background: #1a1a2e; }
-.dark .cal-cell:hover { background: #22223a; }
-.dark .cal-cell--out { background: #15152a; }
-.dark .cal-cell--out .cal-cell-num { color: #555; }
-.dark .cal-cell--today { background: #1e3a3a; }
-.dark .cal-cell-num { color: #ccc; }
-.dark .cal-grid-header { border-bottom-color: #2a2a44; }
+.dark .cal-cell { background: #141413; }
+.dark .cal-cell:hover { background: #1F1F1D; }
+.dark .cal-cell--out { background: #0F0F0E; }
+.dark .cal-cell--out .cal-cell-num { color: rgba(232,232,232,0.25); }
+.dark .cal-cell--today { background: rgba(78,205,196,0.10); }
+.dark .cal-cell-num { color: rgba(232,232,232,0.85); }
+.dark .cal-grid-header { border-bottom-color: rgba(255,255,255,0.10); }
 .dark .cal-event-chip {
-  background: #1e3a3a;
-  border-color: #2d5957;
-  color: #e6f7f5;
+  background: rgba(78,205,196,0.12);
+  border-color: rgba(78,205,196,0.30);
+  color: #E8E8E8;
 }
 .dark .cal-event-chip--discord {
-  background: #3a2a1e;
-  border-color: #59412d;
-  color: #ffe8d4;
+  background: rgba(230,126,34,0.12);
+  border-color: rgba(230,126,34,0.30);
+  color: #E8E8E8;
 }
 .dark .cal-today-btn {
   border-color: #4ECDC4;

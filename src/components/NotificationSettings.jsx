@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { usePushNotifications } from '../hooks/usePushNotifications';
+import { add as addInAppNotification } from '../lib/inAppNotifications';
 
 export default function NotificationSettings({ userId }) {
   const { supported, permission, isSubscribed, busy, error, subscribe, unsubscribe } =
@@ -11,6 +12,11 @@ export default function NotificationSettings({ userId }) {
   const handleTestPush = async () => {
     setTestBusy(true);
     setTestStatus(null);
+    addInAppNotification({
+      title: 'Lifestyle test push',
+      body: 'Push is working end-to-end.',
+      link: '/',
+    });
     try {
       const { data, error: invokeErr } = await supabase.functions.invoke('push-test', {
         body: { title: 'Lifestyle test push', body: 'Push is working end-to-end.' },

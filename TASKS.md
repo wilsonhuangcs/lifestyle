@@ -29,20 +29,25 @@ Dashboard → Project Settings → Edge Functions → Secrets (or `supabase secr
 - [ ] Smoke-test `notify-event` directly: manually create a calendar event in the UI, copy its UUID, then `curl -X POST https://dswetxilqyzvrgocqobf.supabase.co/functions/v1/notify-event -H "Authorization: Bearer <NOTIFY_EVENT_SECRET>" -H "Content-Type: application/json" -d '{"event_ids":["<uuid>"]}'`. Push should arrive within seconds. — @user — todo
 - [ ] If nothing arrives: check Supabase Edge Function logs for `notify-event` and `push-test` (Dashboard → Edge Functions → Logs) — @user — todo
 
-### Group C — Discord bot + MCP wiring (Announcement Channel path)
+### Group C — Tampermonkey userscript (Discord channel relay)
 
-- [ ] **Precondition check:** open Discord, look at the source Pokemon channel. Does it have a megaphone icon next to the channel name AND a "Follow" button visible to members? If NO, this approach won't work — pause and pivot to manual forwarding or browser-extension bridge (separate plan) — @user — todo
-- [ ] Create your own private Discord server — @user — todo
-- [ ] In the public Pokemon server, click the announcement channel header → "Follow" → pick a channel in your private server as the cross-post target. Note the **channel ID** of the mirrored channel (right-click → Copy Channel ID; requires Developer Mode in Discord settings) — @user — todo
-- [ ] Create a Discord application + bot at https://discord.com/developers → enable "Message Content Intent" → invite the bot to YOUR private server with `View Channel` + `Read Message History` permissions. Save the **bot token**. — @user — todo
-- [ ] Install a Discord MCP server in Claude Code. Recommended: [`mcp-discord`](https://github.com/v-3/discordmcp) or `@modelcontextprotocol/server-discord` — confirm the chosen server exposes a tool to fetch recent messages from a channel by ID with `after_message_id` or `after_timestamp` filtering. Configure via `~/.claude/claude_desktop_config.json` (or `claude mcp add` if available), passing the bot token as an env var. — @user — todo
-- [ ] Verify Supabase MCP is installed in Claude Code with `execute_sql` against project `dswetxilqyzvrgocqobf`. (If not, `claude mcp add` it.) — @user — todo
+> **Architecture pivot 2026-05-14:** The source channel is NOT an announcement channel (no megaphone / Follow button), so the cross-post + bot path is dead. Replaced with a Tampermonkey userscript that scrapes new messages from a Discord tab open in your browser and POSTs them to a new `discord-raw-ingest` Edge Function. The script lives at [`tools/drop-relay.user.js`](tools/drop-relay.user.js). The `discord_messages` table and `discord-raw-ingest` Edge Function were deployed 2026-05-14.
+>
+> **Hard limitation:** The userscript only fires while Discord is open in a browser tab (web Discord, not the native app). Drops posted while your browser is closed won't be caught. Mitigation: install Discord as a PWA on a machine that's usually on, or just keep a tab open.
+
+- [ ] Install **Tampermonkey** (or Violentmonkey) in your browser — https://www.tampermonkey.net/ — @user — todo
+- [ ] In Discord settings → Advanced → enable **Developer Mode** — @user — todo
+- [ ] Right-click the target Pokemon channel → **Copy Channel ID** → save it — @user — todo
+- [ ] Open `tools/drop-relay.user.js` in the repo. Edit the two `<...>` placeholders near the top: `TARGET_CHANNEL_ID` and `INGEST_SECRET` (use the same `NOTIFY_EVENT_SECRET` value you set as a Supabase secret) — @user — todo
+- [ ] Tampermonkey dashboard → **+** (new script) → paste the entire edited file → **Save** (Ctrl/Cmd+S) — @user — todo
+- [ ] Open `discord.com` in the browser and navigate to the target channel. Open DevTools (F12) → Console. You should see `[drop-relay] observer attached to channel <ID>` and `[drop-relay] seeded cursor: <snowflake>`. The seed step ensures NO existing messages are re-ingested — only messages posted from now onward will be forwarded — @user — todo
+- [ ] Verify Supabase MCP is installed in Claude Code with `execute_sql` against project `dswetxilqyzvrgocqobf`. (If not: `claude mcp add supabase npx -y @supabase/mcp-server-supabase` then configure with a personal access token from supabase.com → Account → Access Tokens.) — @user — todo
 
 ### Group D — Schedule the agent
 
 Once Groups A–C are done, use Claude Code's `/schedule` skill to create a recurring agent. Cron suggestion: `*/10 * * * *` (every 10 min — balances freshness against Max usage).
 
-Substitute `<TARGET_USER_ID>`, `<MIRRORED_CHANNEL_ID>`, and `<NOTIFY_EVENT_SECRET>` with your actual values when creating the schedule. Run the prompt one-off interactively first to confirm it works before scheduling.
+Substitute `<TARGET_USER_ID>` and `<NOTIFY_EVENT_SECRET>` with your actual values when creating the schedule. Run the prompt one-off interactively first to confirm it works before scheduling.
 
 **Agent prompt template (copy verbatim into `/schedule`):**
 
@@ -53,65 +58,71 @@ at the end.
 
 STEPS (execute in order, then stop):
 
-1. Use Supabase MCP execute_sql against project dswetxilqyzvrgocqobf:
-     select source_message_id, created_at
-     from calendar_events
-     where user_id = '<TARGET_USER_ID>'
-       and source = 'discord'
-       and source_message_id is not null
-     order by source_message_id desc nulls last
-     limit 1;
-   Save returned source_message_id as `cursor`. If null, set
-   cursor_time = now() - interval '2 hours'.
+1. Use Supabase MCP execute_sql against project dswetxilqyzvrgocqobf to
+   pull unprocessed raw Discord messages:
+     select id, message_id, content, posted_at, jump_url
+     from discord_messages
+     where user_id = '<TARGET_USER_ID>' and processed_at is null
+     order by posted_at asc nulls last, message_id asc
+     limit 50;
+   Save the rows as `rows`. If rows is empty, output
+   "Ingested 0 drops (no new messages)." and stop.
 
-2. Use Discord MCP to fetch up to 50 recent messages from channel
-   '<MIRRORED_CHANNEL_ID>', filtering: after_message_id=cursor if available
-   else after_timestamp=cursor_time.
-
-3. For each Discord message m, classify as a Pokémon TCG drop event:
-   - is_event = true ONLY when m announces a specific buying opportunity AND
-     mentions a date OR specific time ("tonight at 9pm", "Friday 5/15 9am ET",
-     "tomorrow morning", etc.).
-   - Resolve relative dates using m.timestamp as "now". Default timezone =
-     America/New_York unless the message specifies otherwise (ET, EST, EDT,
+2. For each row, classify the content as a Pokémon TCG drop event:
+   - is_event = true ONLY when the content announces a specific buying
+     opportunity AND mentions a date OR specific time (e.g. "tonight at 9pm",
+     "Friday 5/15 9am ET", "tomorrow morning").
+   - Resolve relative dates using row.posted_at as "now". Default timezone =
+     America/New_York unless the content specifies otherwise (ET, EST, EDT,
      PT, CT, MT).
    - title: concise ≤ 80 chars (e.g. "Booster Bundle Restock @ Target").
    - confidence: 0..1. Require ≥ 0.6 to ingest.
-   - Skip if not an event.
+   - Output for each: { id, message_id, is_event, title, starts_at_iso,
+                       ends_at_iso, location, confidence }
 
-4. For each high-confidence event, use Supabase MCP execute_sql to insert
-   (idempotent — duplicates skipped by unique constraint):
+3. For each high-confidence event (is_event=true AND confidence ≥ 0.6 AND
+   starts_at_iso AND title), use Supabase MCP execute_sql to insert into
+   calendar_events (idempotent — duplicates skipped by unique constraint):
      insert into calendar_events
        (user_id, title, starts_at, ends_at, location, description,
         source, source_message_id, source_url, is_read)
      values
        ('<TARGET_USER_ID>', $title, $starts_at_iso, $ends_at_iso, $location,
-        substring($original_content for 1000), 'discord', $messageId,
-        $jumpUrl, false)
+        substring($content for 1000), 'discord', $message_id, $jump_url, false)
      on conflict on constraint calendar_events_user_source_msg_unique
        do nothing
      returning id;
-   Collect the returned ids into a list `new_ids`.
+   Save the returned event_id alongside its discord_messages.id. Collect
+   newly-inserted event ids into `new_event_ids`.
 
-5. If new_ids is non-empty, send a single HTTP POST via Bash:
+4. Mark every processed row (both high-confidence AND low-confidence) as
+   processed in discord_messages so we don't re-classify them:
+     update discord_messages
+        set processed_at = now(),
+            event_id = $event_id     -- null for low-confidence rows
+      where id = $row_id;
+
+5. If new_event_ids is non-empty, send a single HTTP POST via Bash:
      curl -X POST https://dswetxilqyzvrgocqobf.supabase.co/functions/v1/notify-event \
        -H "Authorization: Bearer <NOTIFY_EVENT_SECRET>" \
        -H "Content-Type: application/json" \
        -d '{"event_ids":[<comma-separated quoted ids>]}'
 
-6. Output exactly one line: "Ingested N drops, skipped M low-confidence messages."
+6. Output exactly one line:
+   "Ingested N drops, skipped M low-confidence (of K total messages)."
 ```
 
 - [ ] Create the schedule in `/schedule` with the prompt above, cron = every 10 minutes — @user — todo
 
 ### Group E — End-to-end smoke test
 
-- [ ] Run the agent prompt once interactively in Claude Code (no schedule). It should report `Ingested 0, skipped N` since there are no new messages — @user — todo
-- [ ] Post a test drop message in the mirrored channel of your private server: `"Booster Bundle restock at Target this Friday 5/15 at 9am ET"` — @user — todo
-- [ ] Wait up to 10 min (or run the agent prompt manually again). Verify: (1) event lands on May 15 in the Calendar grid, (2) push notification arrives on phone + desktop, (3) red badge appears on the Calendar nav item, (4) tapping the notification opens the app — @user — todo
-- [ ] Run the agent prompt a second time immediately. Should report `Ingested 0` (idempotency check) — @user — todo
-- [ ] If any step fails, check: Supabase Edge Function logs for `notify-event`; `/schedule` run history; the agent's last summary line — @user — todo
-- [ ] Once verified, remove the test event from the Calendar (Edit → Delete). **Caveat:** deleting an event will cause the agent to re-ingest the same Discord message on its next sweep, since dedup uses `source_message_id` only (not a separate "processed messages" table). If this matters, create an `ingested_messages` table to track raw message ids regardless of event lifecycle — @user — todo
+- [ ] Send yourself a test Discord DM, or post in any channel you can write to that matches `TARGET_CHANNEL_ID`. Example text: `"Booster Bundle restock at Target this Friday 5/15 at 9am ET"`. The userscript should log `[drop-relay] ingest ok: <messageId>` in the console within a second — @user — todo
+- [ ] Verify the row landed in Supabase: in Dashboard → SQL Editor, run `select * from discord_messages order by received_at desc limit 5;` — should show your test message with `processed_at = null` — @user — todo
+- [ ] Run the Group D agent prompt once interactively in Claude Code (no schedule yet). It should report `Ingested 1 drops, skipped 0 low-confidence (of 1 total messages).` and create a row in `calendar_events` — @user — todo
+- [ ] Verify the event arrived in the UI: the Calendar grid should show the event on May 15. A push notification should land on phone + desktop. Red badge on Calendar nav — @user — todo
+- [ ] Run the agent prompt a second time immediately. Should report `Ingested 0 drops (no new messages).` (idempotency: every row was marked processed) — @user — todo
+- [ ] Create the cron schedule in `/schedule` if all the above passed — @user — todo
+- [ ] Once verified, delete the test row: `delete from discord_messages where content like 'Booster Bundle restock at Target this Friday%';` and the test calendar event via the UI. **Caveat:** since `discord_messages.processed_at` is set, deleting the calendar event won't cause re-ingestion (the row is marked processed regardless of event lifecycle) — @user — todo
 
 ---
 
